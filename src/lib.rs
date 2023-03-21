@@ -8,7 +8,7 @@ pub fn gen_private_key() -> [u8; 32] {
 pub fn connect(
     _portal_url: String,
     _token: String,
-    _private_key: [u8; 32],
+    _private_key: &[u8],
 ) -> Result<u32, &'static str> {
     let fd: u32 = 0;
     // TODO: Mock websocket connection, periodically returning updated resources to the client
