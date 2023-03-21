@@ -3,9 +3,5 @@ name = "firezone-connlib"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 boringtun = "0.5"
-x25519-dalek = { version = "2.0.0-pre.1", features = ["reusable_secrets"] }
-rand_core = { version = "0.6.3", features = ["getrandom"] }
