@@ -6,7 +6,7 @@ pub struct Session {
 }
 
 impl Session {
-    fn connect(_portal_url: String, _token: String) -> Session {
+    pub fn connect(_portal_url: String, _token: String) -> Session {
         let fd = 9999;
         let handle = fd + 1;
 
@@ -23,7 +23,7 @@ impl Session {
         Session { fd, handle }
     }
 
-    fn disconnect(&self) -> bool {
+    pub fn disconnect(&self) -> bool {
         // 1. Close the websocket connection
         // 2. Free the device handle
         // 3. Close the file descriptor
