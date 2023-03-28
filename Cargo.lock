@@ -51,8 +51,7 @@ dependencies = [
 [[package]]
 name = "boringtun"
 version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51d23af4567b268583ccc30a983a0f937fb5fc05e71e9de96012a72ad10d1a45"
+source = "git+https://github.com/cloudflare/boringtun?rev=be08af9#be08af94a76135df209bbbb93492a6bc1e1f769f"
 dependencies = [
  "aead",
  "base64",
@@ -189,6 +188,8 @@ name = "firezone-connlib"
 version = "0.1.0"
 dependencies = [
  "boringtun",
+ "ndisapi",
+ "virtnet",
 ]
 
 [[package]]
@@ -304,24 +305,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "memoffset"
-version = "0.6.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
+name = "ndisapi"
+version = "0.1.0"
+source = "git+https://github.com/firezone/ndisapi?rev=034d595#034d5951e7c291ecc85d13183ed8f75fef909c2f"
 dependencies = [
- "autocfg",
+ "bitflags",
+ "windows",
 ]
 
 [[package]]
 name = "nix"
-version = "0.24.3"
+version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa52e972a9a719cecb6864fb88568781eb706bac2cd1d4f04a648542dbf78069"
+checksum = "f346ff70e7dbfd675fe90590b92d59ef2de15a8779ae305ebcbfd3f0caf59be4"
 dependencies = [
+ "autocfg",
  "bitflags",
  "cfg-if",
  "libc",
- "memoffset",
 ]
 
 [[package]]
@@ -562,6 +563,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
+name = "virtnet"
+version = "0.1.0"
+source = "git+https://github.com/firezone/virtnet?rev=2bac043#2bac04382cf1a7549b18c68d21e1ffa6a6702c4b"
+dependencies = [
+ "bitflags",
+ "windows",
+]
+
+[[package]]
 name = "wasi"
 version = "0.9.0+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -658,6 +668,15 @@ name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
+
+[[package]]
+name = "windows"
+version = "0.44.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e745dab35a0c4c77aa3ce42d595e13d2003d6902d6b08c9ef5fc326d08da12b"
+dependencies = [
+ "windows-targets",
+]
 
 [[package]]
 name = "windows-sys"

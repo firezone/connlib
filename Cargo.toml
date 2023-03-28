@@ -4,4 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-boringtun = "0.5"
+# TODO: Replace this with Firezone's customized fork by @conectado
+boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "be08af9" }
+
+# Windows tunnel dependencies
+[target.'cfg(windows)'.dependencies]
+ndisapi = { git = "https://github.com/firezone/ndisapi", rev = "034d595" }
+virtnet = { git = "https://github.com/firezone/virtnet", rev = "2bac043" }

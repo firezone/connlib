@@ -3,15 +3,17 @@
 pub struct Session {
     fd: u32,
     handle: u32,
+    // TODO: WebSocket connection handle etc
 }
 
 impl Session {
     pub fn connect(_portal_url: String, _token: String) -> Session {
+        // TODO: Do this in a more platform agnostic way
         let fd = 9999;
         let handle = fd + 1;
 
-        // 1. Find a free file descriptor
-        // 2. Allocate a device handle
+        // 1. Find a free file descriptor (UNIX)
+        // 2. Allocate a device handle (UNIX)
         // 3. Save this mapping for looking up later
         // 4. Connect the WebSocket
         println!("Found a free file descriptor: {fd}");
@@ -25,8 +27,8 @@ impl Session {
 
     pub fn disconnect(&self) -> bool {
         // 1. Close the websocket connection
-        // 2. Free the device handle
-        // 3. Close the file descriptor
+        // 2. Free the device handle (UNIX)
+        // 3. Close the file descriptor (UNIX)
         // 4. Remove the mapping
         println!("Closed the websocket connection");
         println!("Freed the device handle {}", self.handle);
