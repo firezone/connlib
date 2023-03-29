@@ -8,6 +8,7 @@ on:
 
 env:
   RUSTFLAGS: -Dwarnings
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
 
 jobs:
   cargo_windows:
@@ -35,5 +36,8 @@ jobs:
           eval `ssh-agent -s`
           ssh-add - <<< '${{ secrets.NDISAPI_CLONE_KEY }}'
           ssh-add - <<< '${{ secrets.VIRTNET_CLONE_KEY }}'
-      - name: Run cargo check
-        run: cargo check
+      - name: Run cargo static analysis checks
+        run: |
+          cargo check
+          cargo clippy -- -D clippy::all
+          cargo test
