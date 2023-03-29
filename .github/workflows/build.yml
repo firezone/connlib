@@ -32,7 +32,7 @@ jobs:
       - name: Update toolchain
         run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
       - name: Authenticate SSH agent
-      - uses: webfactory/ssh-agent@v0.7.0
+        uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: |
             ${{ secrets.VIRTNET_CLONE_KEY }}
