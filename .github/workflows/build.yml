@@ -11,8 +11,8 @@ env:
   CARGO_NET_GIT_FETCH_WITH_CLI: true
 
 jobs:
-  cargo_windows:
-    name: Check
+  static_analysis:
+    name: Static analysis
     strategy:
       matrix:
         rust: [stable, nightly]
@@ -32,10 +32,11 @@ jobs:
       - name: Update toolchain
         run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
       - name: Authenticate SSH agent
-        run: |
-          eval `ssh-agent -s`
-          ssh-add - <<< '${{ secrets.NDISAPI_CLONE_KEY }}'
-          ssh-add - <<< '${{ secrets.VIRTNET_CLONE_KEY }}'
+      - uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: |
+            ${{ secrets.VIRTNET_CLONE_KEY }}
+            ${{ secrets.NDISAPI_CLONE_KEY }}
       - name: Run cargo static analysis checks
         run: |
           cargo check
