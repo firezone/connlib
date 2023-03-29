@@ -9,5 +9,5 @@ boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "be08af9" }
 
 # Windows tunnel dependencies
 [target.'cfg(windows)'.dependencies]
-ndisapi = { git = "git+ssh://git@github.com/firezone/ndisapi", rev = "034d595" }
-virtnet = { git = "git+ssh://git@github.com/firezone/virtnet", rev = "2bac043" }
+ndisapi = { git = "ssh://git@github.com/firezone/ndisapi", rev = "034d595" }
+virtnet = { git = "ssh://git@github.com/firezone/virtnet", rev = "2bac043" }

@@ -307,7 +307,7 @@ dependencies = [
 [[package]]
 name = "ndisapi"
 version = "0.1.0"
-source = "git+git+ssh://git@github.com/firezone/ndisapi?rev=034d595#034d5951e7c291ecc85d13183ed8f75fef909c2f"
+source = "git+ssh://git@github.com/firezone/ndisapi?rev=034d595#034d5951e7c291ecc85d13183ed8f75fef909c2f"
 dependencies = [
  "bitflags",
  "windows",
@@ -565,7 +565,7 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 [[package]]
 name = "virtnet"
 version = "0.1.0"
-source = "git+git+ssh://git@github.com/firezone/virtnet?rev=2bac043#2bac04382cf1a7549b18c68d21e1ffa6a6702c4b"
+source = "git+ssh://git@github.com/firezone/virtnet?rev=2bac043#2bac04382cf1a7549b18c68d21e1ffa6a6702c4b"
 dependencies = [
  "bitflags",
  "windows",
