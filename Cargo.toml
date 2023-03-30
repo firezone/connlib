@@ -5,7 +5,11 @@ edition = "2021"
 
 [dependencies]
 # TODO: Replace this with Firezone's customized fork by @conectado
-boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "be08af9" }
+boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "be08af9", features = ["device"] }
+
+# Android tunnel dependencies
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.17.0"
 
 # Windows tunnel dependencies
 [target.'cfg(windows)'.dependencies]
