@@ -1,3 +1,3 @@
-# connlib-apple
+# connlib
 
-A description of this package.
+Apple Package wrapper for Connlib
