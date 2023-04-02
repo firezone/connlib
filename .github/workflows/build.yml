@@ -40,12 +40,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Update toolchain
         run: rustup update --no-self-update ${{ matrix.rust }} && rustup default ${{ matrix.rust }} && rustup component add clippy
-      - name: Authenticate SSH agent
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: |
-            ${{ secrets.VIRTNET_CLONE_KEY }}
-            ${{ secrets.NDISAPI_CLONE_KEY }}
       - name: Run cargo static analysis checks
         run: |
           cargo check
