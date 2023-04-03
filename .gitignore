@@ -1,5 +1,7 @@
 ### Rust ###
 /target
+# Libraries shouldn't lock their dependencies
+/Cargo.lock
 
 ### Android ###
 # Gradle files
