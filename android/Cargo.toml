@@ -4,9 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# TODO: boringtun seems to be missing the `static_secrets` feature for this crate.
-# This causes a compile error "StaticSecret not found in root". So include it here.
-x25519-dalek = { version = "2.0.0-pre.1", features = ["reusable_secrets", "static_secrets"] }
 jni = { version = "0.21.1", features = ["invocation"] }
 firezone-connlib = { path = "../" }
 log = "0.4"
