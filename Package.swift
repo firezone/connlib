@@ -11,10 +11,10 @@ let package = Package(
       .iOS(.v15)
   ],
   products: [
-    .library(name: "ConnlibKit", targets: ["ConnlibKit"]),
+    .library(name: "ConnlibKit", targets: ["ConnlibKit"])
     ],
   dependencies: [
-      .package(path: "./apple")
+      .package(path: "apple")
   ],
   targets: [
     // Targets are the basic building blocks of a package. A target can define a module or a test suite.
