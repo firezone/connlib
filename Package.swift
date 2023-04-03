@@ -1,3 +1,4 @@
+// swift-tools-version: 5.7
 // This top-level Package.swift is needed because the Swift Package Manager does not support
 // multiple Package.swift files in a single package. This file is only used to build the
 // Swift Package Manager package. The actual package is contained in the apple/ subdirectory.
