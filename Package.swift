@@ -14,7 +14,7 @@ let package = Package(
     .library(name: "ConnlibKit", targets: ["ConnlibKit"])
     ],
   dependencies: [
-      .package(path: "apple")
+      .package(path: "../connlib/apple")
   ],
   targets: [
     // Targets are the basic building blocks of a package. A target can define a module or a test suite.
