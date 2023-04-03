@@ -1,41 +1,68 @@
+#[macro_use]
+extern crate log;
+extern crate android_logger;
 extern crate jni;
+
+use android_logger::Config;
+use log::LevelFilter;
+
 use self::jni::JNIEnv;
 use firezone_connlib::Session;
-use jni::objects::{JClass, JString};
+use jni::objects::{JClass, JObject, JString, JValue};
+
+/// This should be called once after the library is loaded by the system.
+#[allow(non_snake_case)]
+#[no_mangle]
+pub extern "system" fn Java_dev_firezone_connlib_Logger_init(_: JNIEnv, _: JClass) {
+    android_logger::init_once(
+        Config::default()
+            // Allow all log levels
+            .with_max_level(LevelFilter::Trace)
+            .with_tag("connlib"),
+    )
+}
 
 #[allow(non_snake_case)]
 #[no_mangle]
 pub extern "system" fn Java_dev_firezone_connlib_Session_connect(
     mut env: JNIEnv,
-    _: JClass,
+    _class: JClass,
     portal_url: JString,
     portal_token: JString,
+    callback: JObject,
 ) -> *const Session {
     let portal_url: String = env.get_string(&portal_url).unwrap().into();
     let portal_token: String = env.get_string(&portal_token).unwrap().into();
 
     let session = Session::connect(portal_url, portal_token).expect("Failed to connect to portal");
 
-    let resources = "[]".to_string();
-
-    let _resourcesJSON = "[{\"id\": \"342b8565-5de2-4289-877c-751d924518e9\", \"label\": \"GitLab\", \"address\": \"gitlab.com\", \"tunnel_ipv4\": \"100.71.55.101\", \"tunnel_ipv6\": \"fd00:0222:2011:1111:6def:1001:fe67:0012\"}]";
-    env.call_static_method(
-        "dev/firezone/connlib/Session",
-        "updateResources",
-        "(Ljava/lang/String;)V",
-        &[], // TODO: pass resourceJSON
-    )
-    .expect("Failed to call updateResources");
+    // TODO: Get actual values from portal
+    let tunnelAddressesJSON = "[{\"tunnel_ipv4\": \"100.100.1.1\", \"tunnel_ipv6\": \"fd00:0222:2011:1111:6def:1001:fe67:0012\"}]";
+    let tj = env.new_string(tunnelAddressesJSON).unwrap();
+    let resourcesJSON = "[{\"id\": \"342b8565-5de2-4289-877c-751d924518e9\", \"label\": \"GitLab\", \"address\": \"gitlab.com\", \"tunnel_ipv4\": \"100.71.55.101\", \"tunnel_ipv6\": \"fd00:0222:2011:1111:6def:1001:fe67:0012\"}]";
+    let _rj = env.new_string(resourcesJSON).unwrap();
 
     // TODO: Get actual IPs returned from portal based on this device
-    let _tunnelAddressesJSON = "[{\"tunnel_ipv4\": \"100.100.1.1\", \"tunnel_ipv6\": \"fd00:0222:2011:1111:6def:1001:fe67:0012\"}]";
-    env.call_static_method(
-        "dev/firezone/connlib/Session",
+    match env.call_method(
+        callback,
         "setTunnelAddresses",
-        "(Ljava/lang/String;)V",
-        &[], // TODO: pass tunnelAddressesJSON
-    )
-    .expect("Failed to call setTunnelAddresses");
+        "(Ljava/lang/String;)Z",
+        &[JValue::from(&tj)],
+    ) {
+        Ok(res) => trace!("setTunnelAddresses returned {:?}", res),
+        Err(e) => error!("Failed to call setTunnelAddresses: {:?}", e),
+    }
+
+    // TODO: Use this to update the list of resources
+    // match env.call_method(
+    //     callback,
+    //     "updateResources",
+    //     "(Ljava/lang/String;)Z",
+    //     &[JValue::from(&rj)],
+    // ) {
+    //     Ok(_) => (),
+    //     Err(e) => println!("Failed to call updateResources: {:?}", e),
+    // }
 
     let session_ptr = Box::into_raw(Box::new(session));
 

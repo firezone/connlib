@@ -12,7 +12,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 groupId = "dev.firezone"
                 artifactId = "connlib"
-                version = "0.0.1"
+                version = "0.0.0-19"
                 from(components["release"])
             }
         }
@@ -83,7 +83,7 @@ cargo {
     prebuiltToolchains = true
     verbose = true
     module  = "../"
-    libname = "firezone"
+    libname = "connlib"
     targets = listOf("arm", "arm64", "x86", "x86_64")
 }
 
