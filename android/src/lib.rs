@@ -2,13 +2,11 @@
 extern crate log;
 extern crate android_logger;
 extern crate jni;
-
-use android_logger::Config;
-use log::LevelFilter;
-
 use self::jni::JNIEnv;
+use android_logger::Config;
 use firezone_connlib::Session;
 use jni::objects::{JClass, JObject, JString, JValue};
+use log::LevelFilter;
 
 /// This should be called once after the library is loaded by the system.
 #[allow(non_snake_case)]
@@ -52,17 +50,6 @@ pub extern "system" fn Java_dev_firezone_connlib_Session_connect(
         Ok(res) => trace!("setTunnelAddresses returned {:?}", res),
         Err(e) => error!("Failed to call setTunnelAddresses: {:?}", e),
     }
-
-    // TODO: Use this to update the list of resources
-    // match env.call_method(
-    //     callback,
-    //     "updateResources",
-    //     "(Ljava/lang/String;)Z",
-    //     &[JValue::from(&rj)],
-    // ) {
-    //     Ok(_) => (),
-    //     Err(e) => println!("Failed to call updateResources: {:?}", e),
-    // }
 
     let session_ptr = Box::into_raw(Box::new(session));
 
