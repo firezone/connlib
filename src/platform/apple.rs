@@ -6,7 +6,7 @@ pub struct Tunnel {
 }
 
 impl Tunnel {
-    pub fn new() -> Result<Tunnel, std::io::Error> {
+    pub fn new() -> Result<Self, std::io::Error> {
         // Loop through all utun interfaces and try to find an unused one
         for index in 0..255 {
             let utun_name = format!("utun{index}");

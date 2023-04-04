@@ -11,7 +11,10 @@ impl Tunnel {
     pub fn new() -> Result<Self, std::io::Error> {
         match TunSocket::new(tun_name) {
             Ok(socket) => Ok(Self { socket }),
-            Err(e) => std::io::Error::new(std::io::ErrorKind::Other, "TunSocket::new() failed"),
+            Err(e) => Err(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "TunSocket::new() failed",
+            )),
         }
     }
 }
