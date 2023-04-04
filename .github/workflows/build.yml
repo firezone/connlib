@@ -102,7 +102,7 @@ jobs:
   # Publish packages to the drafted release on merges to master so we can
   # manually test them if needed. Then we can just publish the drafted release
   # and we're good to go.
-  publish:
+  publish-draft:
     if: startsWith(github.ref, 'refs/heads/master')
     runs-on: ubuntu-latest
     needs:
