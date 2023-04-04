@@ -1,6 +1,8 @@
 // swift-tools-version:5.7
 
-var package = Package(
+import PackageDescription
+
+let package = Package(
   name: "Connlib",
   platforms: [
     .macOS(.v12),
@@ -9,15 +11,12 @@ var package = Package(
   products: [
     .library(
       name: "Connlib",
-      targets: ["Connlib"]),
+      targets: ["Connlib"])
   ],
   dependencies: [],
   targets: [
     .target(
       name: "Connlib",
-      dependencies: []),
-    .testTarget(
-      name: "ConnlibTests",
-      dependencies: ["Connlib"]),
+      dependencies: [])
   ]
 )

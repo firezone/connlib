@@ -263,28 +263,28 @@ public class Adapter {
     #elseif os(iOS)
       switch self.state {
       case .started(let wrappedSession):
-        if path.status.isSatisfiable {
+        if path.status == .satisfied {
           wrappedSession.disableSomeRoamingForBrokenMobileSemantics()
           wrappedSession.bumpSockets()
         } else {
-          self.logger.log(.debug, "Connectivity offline, pausing backend.")
-          self.state = .temporaryShutdown()
+          //self.logger.log(.debug, "Connectivity offline, pausing backend.")
+          self.state = .temporaryShutdown
           wrappedSession.disconnect()
         }
 
-      case .temporaryShutdown():
-        guard path.status.isSatisfiable else { return }
+      case .temporaryShutdown:
+        guard path.status == .satisfied else { return }
 
         self.logger.log(level: .debug, "Connectivity online, resuming backend.")
 
         do {
-          try self.setNetworkSettings(self.lastNetworkSettings)
+          try self.setNetworkSettings(self.lastNetworkSettings!)
 
           self.state = .started(
-            try AppleSession.connect("http://localhost:4568", "test-token")
+            try WrappedSession.connect("http://localhost:4568", "test-token", Self.callbackHandler!)
           )
         } catch {
-          self.defaultLogger.debug("Failed to restart backend: \(error.localizedDescription)")
+          self.logger.log(level: .debug, "Failed to restart backend: \(error.localizedDescription)")
         }
 
       case .stopped:

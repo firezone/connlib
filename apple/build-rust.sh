@@ -23,9 +23,13 @@ fi
 
 TARGETS=""
 if [[ "$PLATFORM_NAME" = "iphonesimulator" ]]; then
-    TARGETS="aarch64-apple-ios-sim,x86_64-apple-ios"
+    TARGETS="aarch64-apple-ios-sim,x86_64-apple-ios-sim"
 else
+  if [[ "$PLATFORM_NAME" = "iphoneos" ]]; then
+    TARGETS="aarch64-apple-ios,x86_64-apple-ios"
+  else
     TARGETS="aarch64-apple-darwin,x86_64-apple-darwin"
+  fi
 fi
 
 # if [ $ENABLE_PREVIEWS == "NO" ]; then
