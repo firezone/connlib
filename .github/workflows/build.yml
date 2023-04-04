@@ -65,12 +65,11 @@ jobs:
         with:
           java-version: '17'
           distribution: 'adopt'
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v1
       - name: Assemble Release
         uses: gradle/gradle-build-action@v2
         with:
           arguments: assembleRelease
+          build-root-directory: android
       - name: Move artifact
         run: |
           mv ./android/lib/build/outputs/aar/lib-release.aar ./connlib-${{ needs.draft-release.outputs.tag_name }}
@@ -78,6 +77,7 @@ jobs:
         with:
           name: connlib-android
           path: |
+            ./connlib-${{ needs.draft-release.outputs.tag_name }}
 
   build-apple:
     needs: static-analysis
@@ -89,13 +89,17 @@ jobs:
       - name: Build Connlib.xcframework
         run: |
           cd apple
+          xcodebuild -list
           ./build-xcframework.sh
-          mv Connlib.xcframework ../
+          touch Package.swift
+          swift package compute-checksum Connlib.xcframework > Connlib.xcframework.checksum.txt
+          mv Connlib.xcframework Connlib.xcframework.checksum.txt ../
       - uses: actions/upload-artifact@v3
         with:
           name: connlib-apple
           path: |
             ./Connlib.xcframework
+            ./Connlib.xcframework.checksum.txt
 
   # Publish packages to the drafted release on merges to master so we can
   # manually test them if needed. Then we can just publish the drafted release
@@ -123,4 +127,5 @@ jobs:
           draft: true
           files: |
             Connlib.xcframework
+            Connlib.xcframework.checksum.txt
             connlib-${{ needs.draft-release.outputs.tag_name }}.aar
