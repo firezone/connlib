@@ -11,7 +11,17 @@ env:
   CARGO_NET_GIT_FETCH_WITH_CLI: true
 
 jobs:
-  static_analysis:
+  draft-release:
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.release_drafter.outputs.tag_name }}
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        id: release_drafter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  static-analysis:
     name: Static analysis
     strategy:
       matrix:
@@ -45,3 +55,74 @@ jobs:
           cargo check
           cargo clippy --all-targets --all-features -- -D clippy::all
           cargo test
+
+  build-android:
+    needs: static-analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: Assemble Release
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: assembleRelease
+      - name: Move artifact
+        run: |
+          mv ./android/lib/build/outputs/aar/lib-release.aar ./connlib-${{ needs.draft-release.outputs.tag_name }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: connlib-android
+          path: |
+
+  build-apple:
+    needs: static-analysis
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Connlib.xcframework
+        run: |
+          cd apple
+          ./build-xcframework.sh
+          mv Connlib.xcframework ../
+      - uses: actions/upload-artifact@v3
+        with:
+          name: connlib-apple
+          path: |
+            ./Connlib.xcframework
+
+  # Publish packages to the drafted release on merges to master so we can
+  # manually test them if needed. Then we can just publish the drafted release
+  # and we're good to go.
+  publish:
+    if: startsWith(github.ref, 'refs/heads/master')
+    runs-on: ubuntu-latest
+    needs:
+      - build-android
+      - build-apple
+      - draft-release
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          path: ./
+      # Does XCFramework support this?
+      # - name: Rename artifact file to tag
+      #   run: |
+      #     mv ./firezone*.rpm firezone_${{ needs.draft-release.outputs.tag_name }}-${{ matrix.platform }}.rpm || true
+      #     mv ./firezone*.deb firezone_${{ needs.draft-release.outputs.tag_name }}-${{ matrix.platform }}.deb || true
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.draft-release.outputs.tag_name }}
+          draft: true
+          files: |
+            Connlib.xcframework
+            connlib-${{ needs.draft-release.outputs.tag_name }}.aar

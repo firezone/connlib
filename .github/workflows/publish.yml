@@ -3,17 +3,8 @@ on:
   release:
     types: [created]
 jobs:
-  publish-apple:
-    runs-on: macos-latest
-    permissions:
-      contents: read
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: swift-create-xcframework
-        uses: unsignedapps/swift-create-xcframework@v2
-
-
+  # Noop: XCFramework is attached to release already in build workflow
+  # publish-apple:
   publish-android:
     runs-on: ubuntu-latest
     permissions:
@@ -27,9 +18,9 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
       - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
+        uses: gradle/wrapper-validation-action@v1
       - name: Publish package
-        uses: gradle/gradle-build-action@67421db6bd0bf253fb4bd25b31ebb98943c375e1
+        uses: gradle/gradle-build-action@v2
         with:
           arguments: publish
         env:

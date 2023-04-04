@@ -22,4 +22,12 @@ impl Session {
         // 4. Remove the mapping
         true
     }
+
+    pub fn bump_sockets(&self) -> bool {
+        true
+    }
+
+    pub fn disable_some_roaming_for_broken_mobile_semantics(&self) -> bool {
+        true
+    }
 }

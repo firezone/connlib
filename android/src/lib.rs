@@ -75,7 +75,13 @@ pub extern "system" fn Java_dev_firezone_connlib_Session_disconnect(
 pub extern "system" fn Java_dev_firezone_connlib_Session_bump_sockets(
     session_ptr: *const Session,
 ) -> bool {
-    // TODO: See https://github.com/WireGuard/wireguard-apple/blob/2fec12a6e1f6e3460b6ee483aa00ad29cddadab1/Sources/WireGuardKitGo/api-apple.go#L177
+    if session_ptr.is_null() {
+        return false;
+    }
+
+    unsafe { (*session_ptr).bump_sockets() };
+
+    // TODO: See https://github.com/WireGuard/wireguard-apple/blob/2fec12a6e1f6e3460b6ee483aa00ad29cddadab1/Sources/WireGuardKitGo/api-apple.go#LL197C6-L197C50
     return true;
 }
 
@@ -84,6 +90,12 @@ pub extern "system" fn Java_dev_firezone_connlib_Session_bump_sockets(
 pub extern "system" fn Java_dev_firezone_connlib_disable_some_roaming_for_broken_mobile_semantics(
     session_ptr: *const Session,
 ) -> bool {
+    if session_ptr.is_null() {
+        return false;
+    }
+
+    unsafe { (*session_ptr).disable_some_roaming_for_broken_mobile_semantics() };
+
     // TODO: See https://github.com/WireGuard/wireguard-apple/blob/2fec12a6e1f6e3460b6ee483aa00ad29cddadab1/Sources/WireGuardKitGo/api-apple.go#LL197C6-L197C50
     return true;
 }
