@@ -15,6 +15,12 @@ cd $PROJECT_DIR
 
 export PATH="$HOME/.cargo/bin:$PATH"
 
+# Use llvm from homebrew if installed. Fixes https://github.com/briansmith/ring/issues/1374
+if [[ -d "/opt/homebrew/opt/llvm" ]]; then
+  export LDFLAGS="-L/opt/homebrew/opt/llvm/lib/c++ -Wl,-rpath,/opt/homebrew/opt/llvm/lib/c++"
+  export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+fi
+
 # Without this we can't compile on MacOS Big Sur
 # https://github.com/TimNN/cargo-lipo/issues/41#issuecomment-774793892
 if [[ -n "${DEVELOPER_SDK_DIR:-}" ]]; then
