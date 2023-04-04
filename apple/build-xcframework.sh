@@ -6,6 +6,7 @@ for sdk in iphoneos macosx; do
 
   xcodebuild archive \
     -scheme Connlib \
+    -destination "generic/platform=$sdk" \
     -sdk $sdk \
     -archivePath ./connlib-$sdk \
     SKIP_INSTALL=NO \
