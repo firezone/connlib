@@ -82,6 +82,14 @@ jobs:
           && rustup component add clippy \
           && rustup target add x86_64-linux-android arm-linux-androideabi aarch64-linux-android armv7-linux-androideabi i686-linux-android
 
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
       - uses: actions/setup-java@v3
         with:
           java-version: '17'
@@ -130,6 +138,12 @@ jobs:
           && rustup component add clippy \
           && rustup target add aarch64-apple-ios aarch64-apple-darwin x86_64-apple-ios x86_64-apple-darwin
 
+      - uses: actions/cache@v3
+        with:
+          path: apple/.build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
       - name: Build Connlib.xcframework
         run: |
           cd apple
