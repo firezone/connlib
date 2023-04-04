@@ -1,6 +1,6 @@
 use boringtun::device::tun::TunSocket;
 
-const tun_name: &str = "wg-firezone";
+const TUN_NAME: &str = "wg-firezone";
 
 #[allow(dead_code)]
 pub struct Tunnel {
@@ -9,7 +9,7 @@ pub struct Tunnel {
 
 impl Tunnel {
     pub fn new() -> Result<Self, std::io::Error> {
-        match TunSocket::new(tun_name) {
+        match TunSocket::new(TUN_NAME) {
             Ok(socket) => Ok(Self { socket }),
             Err(_) => Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
