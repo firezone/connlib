@@ -34,7 +34,7 @@ publishing {
 
 android {
     namespace = "dev.firezone.connlib"
-    compileSdk = 33 
+    compileSdk = 33
 
     defaultConfig {
         minSdk = 29

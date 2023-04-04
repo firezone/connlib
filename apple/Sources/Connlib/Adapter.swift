@@ -33,7 +33,7 @@ public class Adapter {
 
   // Maintain a handle to the currently instantiated tunnel adapter 🤮
   public static var currentAdapter: Adapter?
-  
+
   // Maintain a reference to the initialized callback handler
   internal static var callbackHandler: CallbackHandler?
 
