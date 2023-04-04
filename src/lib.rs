@@ -2,6 +2,7 @@ use platform::tunnel::Tunnel;
 
 mod platform;
 
+#[allow(dead_code)]
 pub struct Session {
     tunnel: Tunnel,
 }

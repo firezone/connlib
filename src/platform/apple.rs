@@ -1,5 +1,6 @@
 use boringtun::device::tun::TunSocket;
 
+#[allow(dead_code)]
 pub struct Tunnel {
     socket: TunSocket,
 }
