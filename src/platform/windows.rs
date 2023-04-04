@@ -3,7 +3,7 @@ pub struct Tunnel {
 }
 
 impl Tunnel {
-    fn new() -> Result<Tunnel, std::io::Error> {
+    pub fn new() -> Result<Tunnel, std::io::Error> {
         Ok(Tunnel {})
     }
 }
