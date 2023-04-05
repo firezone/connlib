@@ -5,7 +5,7 @@ for sdk in iphoneos macosx; do
   echo "Building for $sdk"
 
   xcodebuild archive \
-    -scheme connlib \
+    -scheme Connlib \
     -destination "generic/platform=$sdk" \
     -sdk $sdk \
     -archivePath ./connlib-$sdk \
