@@ -147,9 +147,12 @@ jobs:
             ${{ runner.os }}-spm-
 
       - name: Build Connlib.xcframework
+        env:
+          CONFIGURATION: Release
+          PROJECT_DIR: .
         run: |
           cd apple
-          PROJECT_DIR=. ./build-rust.sh
+          ./build-rust.sh
           ./build-xcframework.sh
           touch Package.swift
           swift package compute-checksum Connlib.xcframework > Connlib.xcframework.checksum.txt
