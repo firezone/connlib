@@ -1,8 +1,13 @@
 .DS_Store
+
+# Rust
+/target
+Cargo.lock
+
+### Xcode ###
+xcuserdata/
 /.build
 /Packages
-/*.xcodeproj
-xcuserdata/
 DerivedData/
 .swiftpm/config/registries.json
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
@@ -10,6 +15,15 @@ DerivedData/
 *.xcarchive/
 *.xcframework/
 
-# Rust
-/target
-Cargo.lock
+### Xcode Patch ###
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+/*.gcno
+**/xcshareddata/WorkspaceSettings.xcsettings
+
+## Xcode 8 and earlier
+*.xcscmblueprint
+*.xccheckout
