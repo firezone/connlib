@@ -133,7 +133,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Setup toolchain
         run: |
-          brew install zig --HEAD
           rustup update --no-self-update ${{ matrix.rust }} \
           && rustup default ${{ matrix.rust }} \
           && rustup component add clippy \
@@ -148,9 +147,6 @@ jobs:
             ${{ runner.os }}-spm-
 
       - name: Build Connlib.xcframework
-        env:
-          CC: "zig cc"
-          AR: "zig ar"
         run: |
           cd apple
           PROJECT_DIR=. ./build-rust.sh
