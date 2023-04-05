@@ -16,10 +16,8 @@ cd $PROJECT_DIR
 export PATH="$HOME/.cargo/bin:$PATH"
 
 # Use llvm from homebrew if installed. Fixes https://github.com/briansmith/ring/issues/1374
-if [[ -d "/opt/homebrew/opt/llvm" ]]; then
-  export LDFLAGS="-L/opt/homebrew/opt/llvm/lib/c++ -Wl,-rpath,/opt/homebrew/opt/llvm/lib/c++"
-  export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
-fi
+[ -d "/opt/homebrew/opt/llvm/lib/c++" ] && export LDFLAGS="-L/opt/homebrew/opt/llvm/lib/c++ -Wl,-rpath,/opt/homebrew/opt/llvm/lib/c++"
+[ -d "/opt/homebrew/opt/llvm/lib/bin" ] && export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
 
 # Without this we can't compile on MacOS Big Sur
 # https://github.com/TimNN/cargo-lipo/issues/41#issuecomment-774793892
@@ -32,7 +30,7 @@ if [[ "$PLATFORM_NAME" = "iphonesimulator" ]]; then
     TARGETS="aarch64-apple-ios-sim,x86_64-apple-ios-sim"
 else
   if [[ "$PLATFORM_NAME" = "iphoneos" ]]; then
-    TARGETS="aarch64-apple-ios,x86_64-apple-ios"
+    TARGETS="aarch64-apple-ios"
   else
     TARGETS="aarch64-apple-darwin,x86_64-apple-darwin"
   fi
