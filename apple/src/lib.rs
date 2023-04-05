@@ -1,13 +1,18 @@
+// Swift bridge generated code triggers this below
+#![allow(improper_ctypes)]
+
 use firezone_connlib::Session;
 use std::sync::Arc;
 
 #[swift_bridge::bridge]
 mod ffi {
+    // TODO: Allegedly not FFI safe, but works
     #[swift_bridge(swift_repr = "struct")]
     struct ResourceList {
         resources: String,
     }
 
+    // TODO: Allegedly not FFI safe, but works
     #[swift_bridge(swift_repr = "struct")]
     struct TunnelAddresses {
         address4: String,
