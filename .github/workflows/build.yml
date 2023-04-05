@@ -152,10 +152,11 @@ jobs:
           PROJECT_DIR: .
         run: |
           cd apple
+          # build-xcframework.sh calls build-rust.sh indirectly via `xcodebuild`, but it pollutes the environment
+          # to the point that it causes the `ring` build to fail for the aarch64-apple-darwin target. So, explicitly
+          # build first. See https://github.com/briansmith/ring/issues/1332
           ./build-rust.sh
           ./build-xcframework.sh
-          touch Package.swift
-          swift package compute-checksum Connlib.xcframework > Connlib.xcframework.checksum.txt
           mv Connlib.xcframework Connlib.xcframework.checksum.txt ../
       - uses: actions/upload-artifact@v3
         with:

@@ -25,6 +25,8 @@ public class CallbackHandler {
       "fd00:0222:2021:1111::2"
     ]
 
+    RustString("foo")
+
     // TODO: Use actual passed in resources to achieve split tunnel
     let ipv4Routes = [NEIPv4Route(destinationAddress: "100.64.0.0", subnetMask: "255.192.0.0")]
     let ipv6Routes = [

@@ -21,3 +21,11 @@ xcodebuild -create-xcframework \
 echo "Build successful. Removing temporary archives"
 rm -rf ./connlib-iphoneos.xcarchive
 rm -rf ./connlib-macosx.xcarchive
+
+echo "Computing checksum"
+touch Package.swift
+zip -r Connlib.xcframework.zip Connlib.xcframework
+swift package compute-checksum Connlib.xcframework.zip > Connlib.xcframework.zip.checksum.txt
+
+rm Package.swift
+rm -rf Connlib.xcframework
