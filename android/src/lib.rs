@@ -63,7 +63,7 @@ pub extern "system" fn Java_dev_firezone_connlib_Session_connect(
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern "system" fn Java_dev_firezone_connlib_Session_disconnect(
+pub unsafe extern "system" fn Java_dev_firezone_connlib_Session_disconnect(
     _env: JNIEnv,
     _: JClass,
     session_ptr: *mut Session,
@@ -77,7 +77,7 @@ pub extern "system" fn Java_dev_firezone_connlib_Session_disconnect(
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern "system" fn Java_dev_firezone_connlib_Session_bump_sockets(
+pub unsafe extern "system" fn Java_dev_firezone_connlib_Session_bump_sockets(
     session_ptr: *const Session,
 ) -> bool {
     if session_ptr.is_null() {
@@ -92,7 +92,7 @@ pub extern "system" fn Java_dev_firezone_connlib_Session_bump_sockets(
 
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern "system" fn Java_dev_firezone_connlib_disable_some_roaming_for_broken_mobile_semantics(
+pub unsafe extern "system" fn Java_dev_firezone_connlib_disable_some_roaming_for_broken_mobile_semantics(
     session_ptr: *const Session,
 ) -> bool {
     if session_ptr.is_null() {

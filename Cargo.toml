@@ -4,25 +4,21 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# TODO: boringtun seems to be missing the `static_secrets` feature for this crate.
-# This causes a compile error "StaticSecret not found in root". So include it here.
-x25519-dalek = { version = "2.0.0-pre.1", features = ["reusable_secrets", "static_secrets"] }
-
 # Apple tunnel dependencies
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
-boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "be08af9", features = ["device"] }
+boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "878385f", features = ["device"] }
 
 # Linux tunnel dependencies
 [target.'cfg(target_os = "linux")'.dependencies]
-boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "be08af9", features = ["device"] }
+boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "878385f", features = ["device"] }
 
 # Android tunnel dependencies
 [target.'cfg(target_os = "android")'.dependencies]
-boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "be08af9", features = ["jni-bindings"] }
+boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "878385f", features = ["jni-bindings"] }
 android_logger = "0.13"
 log = "0.4.14"
 
 # Windows tunnel dependencies
 [target.'cfg(target_os = "windows")'.dependencies]
-boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "be08af9", features = [] }
+boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "878385f" }
 wintun = "0.2.1"
