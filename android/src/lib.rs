@@ -12,10 +12,15 @@ use log::LevelFilter;
 #[allow(non_snake_case)]
 #[no_mangle]
 pub extern "system" fn Java_dev_firezone_connlib_Logger_init(_: JNIEnv, _: JClass) {
+    #[cfg(debug_assertions)]
+    let level = LevelFilter::Trace;
+    #[cfg(not(debug_assertions))]
+    let level = LevelFilter::Warn;
+    
     android_logger::init_once(
         Config::default()
             // Allow all log levels
-            .with_max_level(LevelFilter::Trace)
+            .with_max_level(level)
             .with_tag("connlib"),
     )
 }
