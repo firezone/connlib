@@ -187,4 +187,6 @@ jobs:
           files: |
             Connlib.xcframework
             Connlib.xcframework.checksum.txt
+
+            # We have a publish workflow that *also* builds/publishes to the GitHub Package Registry
             connlib-${{ needs.draft-release.outputs.tag_name }}.aar
