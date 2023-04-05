@@ -123,6 +123,9 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: |
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            ~/.cargo/.package-cache
             ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
@@ -137,7 +140,7 @@ jobs:
           && rustup default ${{ matrix.rust }} \
           && rustup component add clippy \
           && rustup target add aarch64-apple-ios aarch64-apple-darwin x86_64-apple-ios x86_64-apple-darwin \
-          && cargo install cargo-lipo
+          && cargo install --force cargo-lipo
 
       - uses: actions/cache@v3
         with:
