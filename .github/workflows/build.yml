@@ -133,6 +133,9 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Setup toolchain
         run: |
+          # Install latest LLVM from Homebrew -- rustc tends to like this better than the Apple-packaged one
+          brew install llvm
+
           rustup update --no-self-update ${{ matrix.rust }} \
           && rustup default ${{ matrix.rust }} \
           && rustup component add clippy \
@@ -145,6 +148,7 @@ jobs:
           key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-spm-
+
       - name: Build Connlib.xcframework
         run: |
           cd apple

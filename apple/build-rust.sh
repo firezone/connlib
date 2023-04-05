@@ -16,8 +16,9 @@ cd $PROJECT_DIR
 export PATH="$HOME/.cargo/bin:$PATH"
 
 # Use llvm from homebrew if installed. Fixes https://github.com/briansmith/ring/issues/1374
-[ -d "/opt/homebrew/opt/llvm/lib/c++" ] && export LDFLAGS="-L/opt/homebrew/opt/llvm/lib/c++ -Wl,-rpath,/opt/homebrew/opt/llvm/lib/c++"
-[ -d "/opt/homebrew/opt/llvm/bin" ] && export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+[ -d "/opt/homebrew/opt/llvm" ] \
+  && export RUSTFLAGS="-C link-arg=-L/opt/homebrew/opt/llvm/lib/c++ -C link-arg=-Wl,-rpath,/opt/homebrew/opt/llvm/lib/c++" \
+  && export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
 
 # Without this we can't compile on MacOS Big Sur
 # https://github.com/TimNN/cargo-lipo/issues/41#issuecomment-774793892
