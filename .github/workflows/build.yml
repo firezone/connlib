@@ -22,6 +22,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   static-analysis:
+    needs: draft-release
     name: Static analysis
     strategy:
       matrix:
@@ -55,7 +56,9 @@ jobs:
           cargo test
 
   build-android:
-    needs: static-analysis
+    needs:
+      - static-analysis
+      - draft-release
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -103,15 +106,17 @@ jobs:
           build-root-directory: android
       - name: Move artifact
         run: |
-          mv ./android/lib/build/outputs/aar/lib-release.aar ./connlib-${{ needs.draft-release.outputs.tag_name }}
+          mv ./android/lib/build/outputs/aar/lib-release.aar ./connlib-${{ needs.draft-release.outputs.tag_name }}.aar
       - uses: actions/upload-artifact@v3
         with:
           name: connlib-android
           path: |
-            ./connlib-${{ needs.draft-release.outputs.tag_name }}
+            ./connlib-${{ needs.draft-release.outputs.tag_name }}.aar
 
   build-apple:
-    needs: static-analysis
+    needs:
+      - static-analysis
+      - draft-release
     runs-on: macos-latest
     permissions:
       contents: read
@@ -140,7 +145,7 @@ jobs:
           && rustup default ${{ matrix.rust }} \
           && rustup component add clippy \
           && rustup target add aarch64-apple-ios aarch64-apple-darwin x86_64-apple-ios x86_64-apple-darwin \
-          && cargo install --force cargo-lipo
+          && cargo install cargo-lipo
 
       - uses: actions/cache@v3
         with:
@@ -160,13 +165,14 @@ jobs:
           # build first. See https://github.com/briansmith/ring/issues/1332
           ./build-rust.sh
           ./build-xcframework.sh
-          mv Connlib.xcframework.zip Connlib.xcframework.zip.checksum.txt ../
+          mv Connlib.xcframework.zip ../Connlib-${{ needs.draft-release.outputs.tag_name }}.xcframework.zip
+          mv Connlib.xcframework.zip.checksum ../Connlib-${{ needs.draft-release.outputs.tag_name }}.xcframework.zip.checksum
       - uses: actions/upload-artifact@v3
         with:
           name: connlib-apple
           path: |
-            ./Connlib.xcframework.zip
-            ./Connlib.xcframework.zip.checksum.txt
+            ./Connlib-${{ needs.draft-release.outputs.tag_name }}.xcframework.zip
+            ./Connlib-${{ needs.draft-release.outputs.tag_name }}.xcframework.zip.checksum.txt
 
   # Publish packages to the drafted release on merges to master so we can
   # manually test them if needed. Then we can just publish the drafted release
@@ -182,19 +188,13 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           path: ./
-      # Does XCFramework support this?
-      # - name: Rename artifact file to tag
-      #   run: |
-      #     mv ./firezone*.rpm firezone_${{ needs.draft-release.outputs.tag_name }}-${{ matrix.platform }}.rpm || true
-      #     mv ./firezone*.deb firezone_${{ needs.draft-release.outputs.tag_name }}-${{ matrix.platform }}.deb || true
+      - run: ls -alR
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ needs.draft-release.outputs.tag_name }}
           draft: true
           files: |
-            Connlib.xcframework.zip
-            Connlib.xcframework.zip.checksum.txt
-
-            # We have a publish workflow that *also* builds/publishes to the GitHub Package Registry
             connlib-${{ needs.draft-release.outputs.tag_name }}.aar
+            Connlib-${{ needs.draft-release.outputs.tag_name }}.xcframework.zip
+            Connlib-${{ needs.draft-release.outputs.tag_name }}.xcframework.zip.checksum
