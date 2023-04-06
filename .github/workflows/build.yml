@@ -39,8 +39,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - uses: actions/cache@v3
-        with:
+        with: &rust_cache
           path: |
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            ~/.cargo/.package-cache
             ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
@@ -68,16 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            apple/target/
-            android/target/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        with: *rust_cache
       - name: Setup toolchain
         run: |
           rustup update --no-self-update ${{ matrix.rust }} \
@@ -126,19 +120,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/.crates.toml
-            ~/.cargo/.crates2.json
-            ~/.cargo/.package-cache
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            apple/target/
-            android/target/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        with: *rust_cache
       - name: Setup toolchain
         run: |
           rustup update --no-self-update ${{ matrix.rust }} \
