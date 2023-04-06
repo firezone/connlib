@@ -1,28 +1,18 @@
-/// Firezone explicitly ties the WireGuard tunnel interface lifetime to
-/// the Control place connection lifetime under a single struct called Session.
+use platform::tunnel::Tunnel;
+
+mod platform;
+
+#[allow(dead_code)]
 pub struct Session {
-    fd: u32,
-    handle: u32,
-    // TODO: WebSocket connection handle etc
+    tunnel: Tunnel,
 }
 
 impl Session {
-    pub fn connect(_portal_url: String, _token: String) -> Session {
-        // TODO: Do this in a more platform agnostic way
-        let fd = 9999;
-        let handle = fd + 1;
-
-        // 1. Find a free file descriptor (UNIX)
-        // 2. Allocate a device handle (UNIX)
-        // 3. Save this mapping for looking up later
-        // 4. Connect the WebSocket
-        println!("Found a free file descriptor: {fd}");
-        println!("Allocated device handle: {handle}");
-
-        // TODO: Mock websocket connection, periodically returning updated resources to the client
-        println!("Connected to portal");
-
-        Session { fd, handle }
+    pub fn connect(_portal_url: String, _token: String) -> Result<Session, std::io::Error> {
+        match Tunnel::new() {
+            Ok(tunnel) => Ok(Session { tunnel }),
+            Err(e) => Err(e),
+        }
     }
 
     pub fn disconnect(&self) -> bool {
@@ -30,11 +20,14 @@ impl Session {
         // 2. Free the device handle (UNIX)
         // 3. Close the file descriptor (UNIX)
         // 4. Remove the mapping
-        println!("Closed the websocket connection");
-        println!("Freed the device handle {}", self.handle);
-        println!("Closed the file descriptor {}", self.fd);
-        println!("Removed the mapping");
+        true
+    }
 
+    pub fn bump_sockets(&self) -> bool {
+        true
+    }
+
+    pub fn disable_some_roaming_for_broken_mobile_semantics(&self) -> bool {
         true
     }
 }
