@@ -19,9 +19,19 @@ jobs:
           distribution: 'adopt'
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
+      - name: Sanity check tag equals AAR version
+        run: |
+          pkg_version=$(awk -F ' = ' '$1 ~ /version/ { gsub(/[\"]/, "", $2); printf("%s",$2); exit; }' android/lib/build.gradle.kts)
+          if [[ "${{ github.ref }}" -eq "$pkg_version" ]]; then
+            echo "Github ref ${{ github.ref }} equals from parsed package version $pkg_version. Continuing..."
+          else
+            echo "Github ref ${{ github.ref }} differs from parsed package version $pkg_version! Aborting..."
+            exit 1
+          fi
       - name: Publish package
         uses: gradle/gradle-build-action@v2
         with:
+          build-root-directory: android
           arguments: publish
         env:
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
