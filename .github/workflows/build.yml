@@ -197,6 +197,6 @@ jobs:
           tag_name: ${{ needs.draft-release.outputs.tag_name }}
           draft: true
           files: |
-            connlib-${{ needs.draft-release.outputs.tag_name }}.aar
-            Connlib-${{ needs.draft-release.outputs.tag_name }}.xcframework.zip
-            Connlib-${{ needs.draft-release.outputs.tag_name }}.xcframework.zip.checksum.txt
+            ./connlib-android/connlib-${{ needs.draft-release.outputs.tag_name }}.aar
+            ./connlib-apple/Connlib-${{ needs.draft-release.outputs.tag_name }}.xcframework.zip
+            ./connlib-apple/Connlib-${{ needs.draft-release.outputs.tag_name }}.xcframework.zip.checksum.txt
