@@ -19,11 +19,11 @@ public class CallbackHandler {
   func onUpdateResources(resourceList: ResourceList) -> Bool {
     // TODO: Also update the Resources Table UI view when this function is called
     let addresses4 =
-    self.adapter?.lastNetworkSettings?.ipv4Settings?.addresses ?? ["100.100.111.2"]
+      self.adapter?.lastNetworkSettings?.ipv4Settings?.addresses ?? ["100.100.111.2"]
     let addresses6 =
-    self.adapter?.lastNetworkSettings?.ipv6Settings?.addresses ?? [
-      "fd00:0222:2021:1111::2"
-    ]
+      self.adapter?.lastNetworkSettings?.ipv6Settings?.addresses ?? [
+        "fd00:0222:2021:1111::2"
+      ]
 
     RustString("foo")
 
@@ -34,19 +34,21 @@ public class CallbackHandler {
     ]
 
     return setTunnelSettingsKeepingSomeExisting(
-      addresses4: addresses4, addresses6: addresses6, ipv4Routes: ipv4Routes, ipv6Routes: ipv6Routes)
+      addresses4: addresses4, addresses6: addresses6, ipv4Routes: ipv4Routes, ipv6Routes: ipv6Routes
+    )
   }
 
   func onSetTunnelAddresses(tunnelAddresses: TunnelAddresses) -> Bool {
     let addresses4 = [tunnelAddresses.address4.toString()]
     let addresses6 = [tunnelAddresses.address6.toString()]
     let ipv4Routes =
-    Adapter.currentAdapter?.lastNetworkSettings?.ipv4Settings?.includedRoutes ?? []
+      Adapter.currentAdapter?.lastNetworkSettings?.ipv4Settings?.includedRoutes ?? []
     let ipv6Routes =
-    Adapter.currentAdapter?.lastNetworkSettings?.ipv6Settings?.includedRoutes ?? []
+      Adapter.currentAdapter?.lastNetworkSettings?.ipv6Settings?.includedRoutes ?? []
 
     return setTunnelSettingsKeepingSomeExisting(
-      addresses4: addresses4, addresses6: addresses6, ipv4Routes: ipv4Routes, ipv6Routes: ipv6Routes)
+      addresses4: addresses4, addresses6: addresses6, ipv4Routes: ipv4Routes, ipv6Routes: ipv6Routes
+    )
   }
 
   private func setTunnelSettingsKeepingSomeExisting(

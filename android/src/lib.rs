@@ -16,7 +16,7 @@ pub extern "system" fn Java_dev_firezone_connlib_Logger_init(_: JNIEnv, _: JClas
     let level = LevelFilter::Trace;
     #[cfg(not(debug_assertions))]
     let level = LevelFilter::Warn;
-    
+
     android_logger::init_once(
         Config::default()
             // Allow all log levels
@@ -39,22 +39,31 @@ pub extern "system" fn Java_dev_firezone_connlib_Session_connect(
 
     let session = Session::connect(portal_url, portal_token).expect("Failed to connect to portal");
 
-    // TODO: Get actual values from portal
-    let tunnelAddressesJSON = "[{\"tunnel_ipv4\": \"100.100.1.1\", \"tunnel_ipv6\": \"fd00:0222:2011:1111:6def:1001:fe67:0012\"}]";
-    let tj = env.new_string(tunnelAddressesJSON).unwrap();
-    let resourcesJSON = "[{\"id\": \"342b8565-5de2-4289-877c-751d924518e9\", \"label\": \"GitLab\", \"address\": \"gitlab.com\", \"tunnel_ipv4\": \"100.71.55.101\", \"tunnel_ipv6\": \"fd00:0222:2011:1111:6def:1001:fe67:0012\"}]";
-    let _rj = env.new_string(resourcesJSON).unwrap();
-
     // TODO: Get actual IPs returned from portal based on this device
+    let tunnelAddressesJSON = "[{\"tunnel_ipv4\": \"100.100.1.1\", \"tunnel_ipv6\": \"fd00:0222:2011:1111:6def:1001:fe67:0012\"}]";
+    let tunnel_addresses = env.new_string(tunnelAddressesJSON).unwrap();
     match env.call_method(
         callback,
-        "setTunnelAddresses",
+        "onSetTunnelAddresses",
         "(Ljava/lang/String;)Z",
-        &[JValue::from(&tj)],
+        &[JValue::from(&tunnel_addresses)],
     ) {
-        Ok(res) => trace!("setTunnelAddresses returned {:?}", res),
+        Ok(res) => trace!("onSetTunnelAddresses returned {:?}", res),
         Err(e) => error!("Failed to call setTunnelAddresses: {:?}", e),
     }
+
+    // TODO: Fix callback ref copy
+    // let resourcesJSON = "[{\"id\": \"342b8565-5de2-4289-877c-751d924518e9\", \"label\": \"GitLab\", \"address\": \"gitlab.com\", \"tunnel_ipv4\": \"100.71.55.101\", \"tunnel_ipv6\": \"fd00:0222:2011:1111:6def:1001:fe67:0012\"}]";
+    // let resources = env.new_string(resourcesJSON).unwrap();
+    // match env.call_method(
+    //     callback,
+    //     "onUpdateResources",
+    //     "(Ljava/lang/String;)Z",
+    //     &[JValue::from(&resources)],
+    // ) {
+    //     Ok(res) => trace!("onUpdateResources returned {:?}", res),
+    //     Err(e) => error!("Failed to call setResources: {:?}", e),
+    // }
 
     let session_ptr = Box::into_raw(Box::new(session));
 
