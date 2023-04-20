@@ -17,18 +17,22 @@ export PATH="$HOME/.cargo/bin:$PATH"
 
 # Without this we can't compile on MacOS Big Sur
 # https://github.com/TimNN/cargo-lipo/issues/41#issuecomment-774793892
-if [[ -n "${DEVELOPER_SDK_DIR:-}" ]]; then
-  export LIBRARY_PATH="${DEVELOPER_SDK_DIR}/MacOSX.sdk/usr/lib:${LIBRARY_PATH:-}"
-fi
+# Also adds -lSystem for iphonesimulator builds
+export LIBRARY_PATH="$(xcrun --sdk $PLATFORM_NAME --show-sdk-path)/usr/lib:${LIBRARY_PATH:-}"
 
 TARGETS=""
-if [[ "$PLATFORM_NAME" = "iphonesimulator" ]]; then
-    TARGETS="aarch64-apple-ios-sim,x86_64-apple-ios-sim"
+if [[ "$PLATFORM_NAME" = "macosx" ]]; then
+  TARGETS="aarch64-apple-darwin,x86_64-apple-darwin"
 else
-  if [[ "$PLATFORM_NAME" = "iphoneos" ]]; then
-    TARGETS="aarch64-apple-ios"
+  if [[ "$PLATFORM_NAME" = "iphonesimulator" ]]; then
+    TARGETS="aarch64-apple-ios-sim,x86_64-apple-ios"
   else
-    TARGETS="aarch64-apple-darwin,x86_64-apple-darwin"
+    if [[ "$PLATFORM_NAME" = "iphoneos" ]]; then
+      TARGETS="aarch64-apple-ios"
+    else
+      echo "Unsupported platform: $PLATFORM_NAME"
+      exit 1
+    fi
   fi
 fi
 

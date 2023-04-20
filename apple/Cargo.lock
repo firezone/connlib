@@ -78,7 +78,7 @@ dependencies = [
 [[package]]
 name = "boringtun"
 version = "0.5.2"
-source = "git+https://github.com/cloudflare/boringtun?rev=be08af9#be08af94a76135df209bbbb93492a6bc1e1f769f"
+source = "git+https://github.com/cloudflare/boringtun?rev=878385f#878385f171d60effac4ad1a9d4dee41e777528b8"
 dependencies = [
  "aead",
  "base64",
@@ -292,7 +292,6 @@ dependencies = [
  "boringtun",
  "log",
  "wintun",
- "x25519-dalek",
 ]
 
 [[package]]
