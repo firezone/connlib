@@ -15,10 +15,13 @@ cd $PROJECT_DIR
 
 export PATH="$HOME/.cargo/bin:$PATH"
 
-# Without this we can't compile on MacOS Big Sur
-# https://github.com/TimNN/cargo-lipo/issues/41#issuecomment-774793892
-# Also adds -lSystem for iphonesimulator builds
-export LIBRARY_PATH="$(xcrun --sdk $PLATFORM_NAME --show-sdk-path)/usr/lib:${LIBRARY_PATH:-}"
+base_dir=$(xcrun --sdk $PLATFORM_NAME --show-sdk-path)
+
+# See https://github.com/briansmith/ring/issues/1332
+export LIBRARY_PATH="${base_dir}/usr/lib"
+export INCLUDE_PATH="${base_dir}/usr/include"
+export CFLAGS="-L ${LIBRARY_PATH} -I ${INCLUDE_PATH}"
+export RUSTFLAGS="-C link-arg=-F$base_dir/System/Library/Frameworks"
 
 TARGETS=""
 if [[ "$PLATFORM_NAME" = "macosx" ]]; then
@@ -39,11 +42,11 @@ fi
 # if [ $ENABLE_PREVIEWS == "NO" ]; then
 
   if [[ $CONFIGURATION == "Release" ]]; then
-      echo "BUIlDING FOR RELEASE ($TARGETS)"
+      echo "BUILDING FOR RELEASE ($TARGETS)"
 
       cargo lipo --release --manifest-path ./Cargo.toml  --targets $TARGETS
   else
-      echo "BUIlDING FOR DEBUG ($TARGETS)"
+      echo "BUILDING FOR DEBUG ($TARGETS)"
 
       cargo lipo --manifest-path ./Cargo.toml  --targets $TARGETS
   fi
