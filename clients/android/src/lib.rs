@@ -4,7 +4,9 @@ extern crate android_logger;
 extern crate jni;
 use self::jni::JNIEnv;
 use android_logger::Config;
-use firezone_connlib::Session;
+use firezone_client_connlib::{
+    Callbacks, Error, ErrorType, ResourceList, Session, TunnelAddresses,
+};
 use jni::objects::{JClass, JObject, JString, JValue};
 use log::LevelFilter;
 
@@ -25,19 +27,36 @@ pub extern "system" fn Java_dev_firezone_connlib_Logger_init(_: JNIEnv, _: JClas
     )
 }
 
+pub enum CallbackHandler {}
+impl Callbacks for CallbackHandler {
+    fn on_update_resources(_resource_list: ResourceList) {
+        todo!()
+    }
+
+    fn on_set_tunnel_adresses(_tunnel_addresses: TunnelAddresses) {
+        todo!()
+    }
+
+    fn on_error(_error: &Error, _error_type: ErrorType) {
+        todo!()
+    }
+}
+
 #[allow(non_snake_case)]
 #[no_mangle]
-pub extern "system" fn Java_dev_firezone_connlib_Session_connect(
+pub unsafe extern "system" fn Java_dev_firezone_connlib_Session_connect(
     mut env: JNIEnv,
     _class: JClass,
     portal_url: JString,
     portal_token: JString,
     callback: JObject,
-) -> *const Session {
+) -> *const Session<CallbackHandler> {
     let portal_url: String = env.get_string(&portal_url).unwrap().into();
     let portal_token: String = env.get_string(&portal_token).unwrap().into();
 
-    let session = Session::connect(portal_url, portal_token).expect("Failed to connect to portal");
+    let session = Box::new(
+        Session::connect::<CallbackHandler>(portal_url.as_str(), portal_token).expect("TODO!"),
+    );
 
     // TODO: Get actual IPs returned from portal based on this device
     let tunnelAddressesJSON = "[{\"tunnel_ipv4\": \"100.100.1.1\", \"tunnel_ipv6\": \"fd00:0222:2011:1111:6def:1001:fe67:0012\"}]";
@@ -52,22 +71,7 @@ pub extern "system" fn Java_dev_firezone_connlib_Session_connect(
         Err(e) => error!("Failed to call setTunnelAddresses: {:?}", e),
     }
 
-    // TODO: Fix callback ref copy
-    // let resourcesJSON = "[{\"id\": \"342b8565-5de2-4289-877c-751d924518e9\", \"label\": \"GitLab\", \"address\": \"gitlab.com\", \"tunnel_ipv4\": \"100.71.55.101\", \"tunnel_ipv6\": \"fd00:0222:2011:1111:6def:1001:fe67:0012\"}]";
-    // let resources = env.new_string(resourcesJSON).unwrap();
-    // match env.call_method(
-    //     callback,
-    //     "onUpdateResources",
-    //     "(Ljava/lang/String;)Z",
-    //     &[JValue::from(&resources)],
-    // ) {
-    //     Ok(res) => trace!("onUpdateResources returned {:?}", res),
-    //     Err(e) => error!("Failed to call setResources: {:?}", e),
-    // }
-
-    let session_ptr = Box::into_raw(Box::new(session));
-
-    session_ptr
+    Box::into_raw(session)
 }
 
 #[allow(non_snake_case)]
@@ -75,19 +79,20 @@ pub extern "system" fn Java_dev_firezone_connlib_Session_connect(
 pub unsafe extern "system" fn Java_dev_firezone_connlib_Session_disconnect(
     _env: JNIEnv,
     _: JClass,
-    session_ptr: *mut Session,
+    session_ptr: *mut Session<CallbackHandler>,
 ) -> bool {
     if session_ptr.is_null() {
         return false;
     }
 
-    unsafe { Box::from_raw(session_ptr).disconnect() }
+    let session = unsafe { &mut *session_ptr };
+    session.disconnect()
 }
 
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "system" fn Java_dev_firezone_connlib_Session_bump_sockets(
-    session_ptr: *const Session,
+    session_ptr: *const Session<CallbackHandler>,
 ) -> bool {
     if session_ptr.is_null() {
         return false;
@@ -102,7 +107,7 @@ pub unsafe extern "system" fn Java_dev_firezone_connlib_Session_bump_sockets(
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "system" fn Java_dev_firezone_connlib_disable_some_roaming_for_broken_mobile_semantics(
-    session_ptr: *const Session,
+    session_ptr: *const Session<CallbackHandler>,
 ) -> bool {
     if session_ptr.is_null() {
         return false;

@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 jni = { version = "0.21.1", features = ["invocation"] }
-firezone-connlib = { path = "../" }
+firezone-client-connlib = { path = "../../libs/client" }
 log = "0.4"
 android_logger = "0.13"
 

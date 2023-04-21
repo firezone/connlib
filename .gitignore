@@ -1,13 +1,12 @@
 ### Rust ###
-/target
+target/
 # Libraries shouldn't lock their dependencies
-/Cargo.lock
+Cargo.lock
 
 ### Android ###
 # Gradle files
 .gradle/
 build/
-android/target/
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -101,11 +100,10 @@ proguard/
 # Log Files
 
 # Android Studio
-/*/build/
+build/
 /*/local.properties
-/*/out
-/*/*/build
-/*/*/production
+out/
+production/
 .navigation/
 *.ipr
 *~
@@ -126,7 +124,6 @@ obj/
 
 # IntelliJ IDEA
 *.iws
-/out/
 
 # User-specific configurations
 .idea/caches/
@@ -172,9 +169,8 @@ fabric.properties
 ### Apple ###
 .DS_Store
 .build/
-build/
 DerivedData/
 xcuserdata/
-**/*.xcuserstate
+*.xcuserstate
 
 Firezone/Developer.xcconfig

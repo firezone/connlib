@@ -1,0 +1,39 @@
+[package]
+name = "firezone-tunnel"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-trait = { version = "0.1", default-features = false }
+tokio = { version = "1.27", default-features = false, features = ["rt", "rt-multi-thread", "sync"] }
+thiserror = { version = "1.0", default-features = false }
+rand_core = { version = "0.6", default-features = false, features = ["getrandom"] }
+serde = { version = "1.0", default-features = false, features = ["derive", "std"] }
+futures =  { version = "0.3", default-features = false, features = ["std", "async-await", "executor"] }
+futures-util =  { version = "0.3", default-features = false, features = ["std", "async-await", "async-await-macro"] }
+tracing = { version = "0.1", default-features = false, features = ["std", "attributes"] }
+parking_lot = { version = "0.12", default-features = false }
+bytes = { version = "1.4", default-features = false, features = ["std"] }
+itertools = { version = "0.10", default-features = false, features = ["use_std"] }
+
+# TODO: research replacing for https://github.com/algesten/str0m
+webrtc = { version = "0.7" }
+
+# Apple tunnel dependencies
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
+libs-common = { path = "../common", features = ["device"] }
+
+# Linux tunnel dependencies
+[target.'cfg(target_os = "linux")'.dependencies]
+libs-common = { path = "../common", features = ["device"] }
+
+# Android tunnel dependencies
+[target.'cfg(target_os = "android")'.dependencies]
+libs-common = { path = "../common", features = ["jni-bindings"] }
+android_logger = "0.13"
+log = "0.4.14"
+
+# Windows tunnel dependencies
+[target.'cfg(target_os = "windows")'.dependencies]
+libs-common = { path = "../common" }
+wintun = "0.2.1"
