@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-for sdk in iphoneos macosx; do
+for sdk in macosx iphoneos iphonesimulator; do
   echo "Building for $sdk"
 
   xcodebuild archive \
@@ -15,11 +15,13 @@ done
 
 xcodebuild -create-xcframework \
   -framework ./connlib-iphoneos.xcarchive/Products/Library/Frameworks/connlib.framework \
+  -framework ./connlib-iphonesimulator.xcarchive/Products/Library/Frameworks/connlib.framework \
   -framework ./connlib-macosx.xcarchive/Products/Library/Frameworks/connlib.framework \
   -output ./Connlib.xcframework
 
 echo "Build successful. Removing temporary archives"
 rm -rf ./connlib-iphoneos.xcarchive
+rm -rf ./connlib-iphonesimulator.xcarchive
 rm -rf ./connlib-macosx.xcarchive
 
 echo "Computing checksum"
