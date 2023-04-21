@@ -4,11 +4,16 @@
 # We call this from an Xcode run script.
 ##################################################
 
-set -e
+set -ex
 
 if [[ -z "$PROJECT_DIR" ]]; then
-    echo "Must provide PROJECT_DIR environment variable set to the Xcode project directory." 1>&2
-    exit 1
+  echo "Must provide PROJECT_DIR environment variable set to the Xcode project directory." 1>&2
+  exit 1
+fi
+
+if [[ -z "$PLATFORM_NAME" ]]; then
+  echo "Must provide PLATFORM_NAME environment variable set to the platform Xcode (e.g. macosx, iphoneos, etc)." 1>&2
+  exit 1
 fi
 
 cd $PROJECT_DIR
