@@ -11,12 +11,11 @@ if [[ -z "$PROJECT_DIR" ]]; then
   exit 1
 fi
 
-if [[ -z "$PLATFORM_NAME" ]]; then
-  echo "Must provide PLATFORM_NAME environment variable set to the platform Xcode (e.g. macosx, iphoneos, etc)." 1>&2
-  exit 1
-fi
-
 cd $PROJECT_DIR
+
+# Default PLATFORM_NAME to macosx if not set.
+: "${PLATFORM_NAME:=macosx}"
+
 
 export PATH="$HOME/.cargo/bin:$PATH"
 
