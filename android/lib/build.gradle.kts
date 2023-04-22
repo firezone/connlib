@@ -12,7 +12,7 @@ afterEvaluate {
             create<MavenPublication>("release") {
                 groupId = "dev.firezone"
                 artifactId = "connlib"
-                version = "0.1.3"
+                version = "0.1.4"
                 from(components["release"])
             }
         }
