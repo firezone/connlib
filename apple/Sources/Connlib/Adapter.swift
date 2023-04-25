@@ -35,7 +35,7 @@ public class Adapter {
   public static var currentAdapter: Adapter?
 
   // Maintain a reference to the initialized callback handler
-  internal static var callbackHandler: CallbackHandler?
+  public static var callbackHandler: CallbackHandler?
 
   // Latest applied NETunnelProviderNetworkSettings
   public var lastNetworkSettings: NEPacketTunnelNetworkSettings?
