@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		8D46EDDF29DBC29800FF01CA /* Adapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D46EDD729DBC29800FF01CA /* Adapter.swift */; };
 		8D46EDE029DBC29800FF01CA /* CallbackHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D46EDD829DBC29800FF01CA /* CallbackHandler.swift */; };
-		8D7D983C29DB8437007B8198 /* connlib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D7D983129DB8437007B8198 /* connlib.framework */; };
 		8D967B2B29DBA064000B9D58 /* libconnlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D967B2A29DBA03F000B9D58 /* libconnlib.a */; };
 		8DA207F829DBD80C00703A4A /* connlib-apple.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA207F329DBD80C00703A4A /* connlib-apple.swift */; };
 		8DA207F929DBD80C00703A4A /* connlib-apple.h in Headers */ = {isa = PBXBuildFile; fileRef = 8DA207F429DBD80C00703A4A /* connlib-apple.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -20,16 +19,6 @@
 		8DA207FF29DBD86100703A4A /* BridgingHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 8D46EDD629DBC29800FF01CA /* BridgingHeader.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		8D7D983D29DB8437007B8198 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 8D7D982829DB8437007B8198 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 8D7D983029DB8437007B8198;
-			remoteInfo = connlib;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
 		8D209DCE29DBE96B00B68D27 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.4.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 		8D46EDD629DBC29800FF01CA /* BridgingHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = "<group>"; };
@@ -37,7 +26,6 @@
 		8D46EDD829DBC29800FF01CA /* CallbackHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CallbackHandler.swift; sourceTree = "<group>"; };
 		8D4BADD129DBD6CC00940F0D /* connlib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = connlib.h; sourceTree = "<group>"; };
 		8D7D983129DB8437007B8198 /* connlib.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = connlib.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		8D7D983B29DB8437007B8198 /* connlibTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = connlibTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8D967B2629DB9A3B000B9D58 /* build-rust.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "build-rust.sh"; sourceTree = "<group>"; };
 		8D967B2A29DBA03F000B9D58 /* libconnlib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libconnlib.a; path = target/universal/debug/libconnlib.a; sourceTree = "<group>"; };
 		8DA207F329DBD80C00703A4A /* connlib-apple.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "connlib-apple.swift"; sourceTree = "<group>"; };
@@ -53,14 +41,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D967B2B29DBA064000B9D58 /* libconnlib.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		8D7D983829DB8437007B8198 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				8D7D983C29DB8437007B8198 /* connlib.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -94,7 +74,6 @@
 			isa = PBXGroup;
 			children = (
 				8D7D983129DB8437007B8198 /* connlib.framework */,
-				8D7D983B29DB8437007B8198 /* connlibTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -179,24 +158,6 @@
 			productReference = 8D7D983129DB8437007B8198 /* connlib.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		8D7D983A29DB8437007B8198 /* connlibTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 8D7D984829DB8437007B8198 /* Build configuration list for PBXNativeTarget "connlibTests" */;
-			buildPhases = (
-				8D7D983729DB8437007B8198 /* Sources */,
-				8D7D983829DB8437007B8198 /* Frameworks */,
-				8D7D983929DB8437007B8198 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				8D7D983E29DB8437007B8198 /* PBXTargetDependency */,
-			);
-			name = connlibTests;
-			productName = connlibTests;
-			productReference = 8D7D983B29DB8437007B8198 /* connlibTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -208,9 +169,6 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					8D7D983029DB8437007B8198 = {
-						CreatedOnToolsVersion = 14.3;
-					};
-					8D7D983A29DB8437007B8198 = {
 						CreatedOnToolsVersion = 14.3;
 					};
 				};
@@ -229,7 +187,6 @@
 			projectRoot = "";
 			targets = (
 				8D7D983029DB8437007B8198 /* connlib */,
-				8D7D983A29DB8437007B8198 /* connlibTests */,
 			);
 		};
 /* End PBXProject section */
@@ -240,13 +197,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DA207FA29DBD80C00703A4A /* .gitignore in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		8D7D983929DB8437007B8198 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -284,22 +234,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		8D7D983729DB8437007B8198 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		8D7D983E29DB8437007B8198 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 8D7D983029DB8437007B8198 /* connlib */;
-			targetProxy = 8D7D983D29DB8437007B8198 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		8D7D984329DB8437007B8198 /* Debug */ = {
@@ -425,7 +360,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 47R2M6779T;
+				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -449,6 +384,7 @@
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.firezone.connlib;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -466,7 +402,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 47R2M6779T;
+				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -493,52 +429,11 @@
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++20";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.firezone.connlib;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		8D7D984929DB8437007B8198 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 47R2M6779T;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
-				MACOSX_DEPLOYMENT_TARGET = 13.3;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "dev.firezone.connlib-tests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		8D7D984A29DB8437007B8198 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 47R2M6779T;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
-				MACOSX_DEPLOYMENT_TARGET = 13.3;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "dev.firezone.connlib-tests";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
-				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -561,15 +456,6 @@
 			buildConfigurations = (
 				8D7D984629DB8437007B8198 /* Debug */,
 				8D7D984729DB8437007B8198 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		8D7D984829DB8437007B8198 /* Build configuration list for PBXNativeTarget "connlibTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				8D7D984929DB8437007B8198 /* Debug */,
-				8D7D984A29DB8437007B8198 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
