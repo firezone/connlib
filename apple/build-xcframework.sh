@@ -26,7 +26,7 @@ rm -rf ./connlib-macosx.xcarchive
 
 echo "Computing checksum"
 touch Package.swift
-zip -r Connlib.xcframework.zip Connlib.xcframework
+zip -r -y Connlib.xcframework.zip Connlib.xcframework
 swift package compute-checksum Connlib.xcframework.zip > Connlib.xcframework.zip.checksum.txt
 
 rm Package.swift
