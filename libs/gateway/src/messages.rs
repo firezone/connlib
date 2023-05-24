@@ -63,6 +63,8 @@ pub struct RemoveResource {
 // either by a client or a gateway by the client.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "snake_case")]
+// TODO: We will need to re-visit webrtc-rs
+#[allow(clippy::large_enum_variant)]
 pub enum IngressMessages {
     InitGateway(InitGateway),
     ConnectionRequest(ConnectionRequest),
@@ -75,6 +77,8 @@ pub enum IngressMessages {
 // to a control pane.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "snake_case")]
+// TODO: We will need to re-visit webrtc-rs
+#[allow(clippy::large_enum_variant)]
 pub enum EgressMessages {
     ConnectionReady(ConnectionReady),
     Metrics(Metrics),

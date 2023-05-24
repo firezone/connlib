@@ -32,6 +32,8 @@ pub struct Relays {
 // by a client.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "snake_case")]
+// TODO: We will need to re-visit webrtc-rs
+#[allow(clippy::large_enum_variant)]
 pub enum IngressMessages {
     InitClient(InitClient),
     Relays(Relays),
@@ -46,6 +48,8 @@ pub enum IngressMessages {
 // These messages can be sent from a client to a control pane
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "snake_case")]
+// TODO: We will need to re-visit webrtc-rs
+#[allow(clippy::large_enum_variant)]
 pub enum EgressMessages {
     GetConnectionDetails(Id),
     RequestConnection(RequestConnection),

@@ -6,8 +6,6 @@ use messages::IngressMessages;
 mod control;
 mod messages;
 
-const VIRTUAL_IFACE_MTU: u16 = 1420;
-
 /// Session type for clients.
 ///
 /// For more information see libs_common docs on [Session][libs_common::Session].

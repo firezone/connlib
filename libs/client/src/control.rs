@@ -12,10 +12,6 @@ use async_trait::async_trait;
 use firezone_tunnel::{ControlSignal, Tunnel};
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
-// FIXME: Replace all `expect` with a handler function
-// that should be passed from the client.
-// Also, we should decide if we disconnect or keep running depending on the error kind.
-
 const INTERNAL_CHANNEL_SIZE: usize = 256;
 
 #[async_trait]
@@ -182,7 +178,6 @@ impl<C: Callbacks + Sync + Send + 'static> ControlSession<IngressMessages, Egres
             _phantom: PhantomData,
         };
 
-        // TODO: We should have some kind of callback from clients to surface errors here
         tokio::spawn(async move { control_plane.start(receiver).await });
 
         Ok((sender, internal_receiver))

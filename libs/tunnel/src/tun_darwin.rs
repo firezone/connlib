@@ -10,7 +10,7 @@ pub(crate) struct DeviceChannel(tokio::io::unix::AsyncFd<TunSocket>);
 
 #[derive(Debug)]
 pub(crate) struct IfaceDevice {
-    fd: RawFd,
+    _fd: RawFd,
 }
 
 impl DeviceChannel {
@@ -67,9 +67,9 @@ impl IfaceDevice {
 
 pub(crate) async fn create_iface() -> Result<(IfaceDevice, DeviceChannel)> {
     let dev = TunSocket::new("utun").unwrap().set_non_blocking().unwrap();
-    let fd = dev.as_raw_fd();
+    let _fd = dev.as_raw_fd();
     tracing::trace!("Started new interface with name: {:?}", dev.name());
     let dev = AsyncFd::new(dev)?;
 
-    Ok((IfaceDevice { fd }, DeviceChannel(dev)))
+    Ok((IfaceDevice { _fd }, DeviceChannel(dev)))
 }

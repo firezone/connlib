@@ -42,6 +42,8 @@ impl Callbacks for CallbackHandler {
     }
 }
 
+/// # Safety
+/// Pointers must be valid
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "system" fn Java_dev_firezone_connlib_Session_connect(
@@ -74,6 +76,8 @@ pub unsafe extern "system" fn Java_dev_firezone_connlib_Session_connect(
     Box::into_raw(session)
 }
 
+/// # Safety
+/// Pointers must be valid
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "system" fn Java_dev_firezone_connlib_Session_disconnect(
@@ -89,6 +93,8 @@ pub unsafe extern "system" fn Java_dev_firezone_connlib_Session_disconnect(
     session.disconnect()
 }
 
+/// # Safety
+/// Pointers must be valid
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "system" fn Java_dev_firezone_connlib_Session_bump_sockets(
@@ -101,9 +107,11 @@ pub unsafe extern "system" fn Java_dev_firezone_connlib_Session_bump_sockets(
     unsafe { (*session_ptr).bump_sockets() };
 
     // TODO: See https://github.com/WireGuard/wireguard-apple/blob/2fec12a6e1f6e3460b6ee483aa00ad29cddadab1/Sources/WireGuardKitGo/api-apple.go#LL197C6-L197C50
-    return true;
+    true
 }
 
+/// # Safety
+/// Pointers must be valid
 #[allow(non_snake_case)]
 #[no_mangle]
 pub unsafe extern "system" fn Java_dev_firezone_connlib_disable_some_roaming_for_broken_mobile_semantics(
@@ -116,5 +124,5 @@ pub unsafe extern "system" fn Java_dev_firezone_connlib_disable_some_roaming_for
     unsafe { (*session_ptr).disable_some_roaming_for_broken_mobile_semantics() };
 
     // TODO: See https://github.com/WireGuard/wireguard-apple/blob/2fec12a6e1f6e3460b6ee483aa00ad29cddadab1/Sources/WireGuardKitGo/api-apple.go#LL197C6-L197C50
-    return true;
+    true
 }
