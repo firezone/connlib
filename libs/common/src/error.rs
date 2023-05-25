@@ -58,6 +58,9 @@ pub enum ConnlibError {
     /// Error regarding our own control protocol.
     #[error("Control plane protocol error. Unexpected messages or message order.")]
     ControlProtocolError,
+    /// Error when manipulating system's interface
+    #[error("Error while manipulating system's interface")]
+    IFaceError,
     /// Glob for errors without a type.
     #[error("Other error")]
     Other(&'static str),

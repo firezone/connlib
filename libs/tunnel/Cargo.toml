@@ -26,6 +26,7 @@ libs-common = { path = "../common", features = ["device"] }
 # Linux tunnel dependencies
 [target.'cfg(target_os = "linux")'.dependencies]
 libs-common = { path = "../common", features = ["device"] }
+rtnetlink = "0.12"
 
 # Android tunnel dependencies
 [target.'cfg(target_os = "android")'.dependencies]
