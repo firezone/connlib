@@ -30,3 +30,13 @@ macros = { path = "../../macros" }
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 swift-bridge = { git = "https://github.com/conectado/swift-bridge.git", branch = "fix-already-declared" }
+boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "878385f", default-features = false, features = ["device"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "878385f", default-features = false, features = ["device"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "878385f", default-features = false, features = ["device"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "878385f", default-features = false }
