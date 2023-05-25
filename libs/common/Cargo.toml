@@ -29,4 +29,4 @@ backoff = { version = "0.4", default-features = false }
 macros = { path = "../../macros" }
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
-swift-bridge = { path = "../../../swift-bridge" }
+swift-bridge = { git = "https://github.com/conectado/swift-bridge.git" branch = "fix-already-declared" }
