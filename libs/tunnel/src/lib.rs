@@ -43,8 +43,9 @@ use libs_common::{
     Result,
 };
 
-use self::tun_device::DeviceChannel;
-use self::tun_device::IfaceDevice;
+use self::tun::create_iface;
+use self::tun::DeviceChannel;
+use self::tun::IfaceDevice;
 
 pub use webrtc::peer_connection::sdp::session_description::RTCSessionDescription;
 
@@ -56,13 +57,9 @@ mod index;
 mod multimap;
 mod peer;
 
-#[cfg(target_os = "linux")]
-#[path = "tun_linux.rs"]
-mod tun_device;
-
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-#[path = "tun_darwin.rs"]
-mod tun_device;
+// TODO: For now all tunnel implementations are the same
+// will divide when we start introducing differences.
+mod tun;
 
 const RESET_PACKET_COUNT_INTERVAL: Duration = Duration::from_secs(1);
 const REFRESH_PEERS_TIEMRS_INTERVAL: Duration = Duration::from_secs(1);
@@ -147,7 +144,7 @@ where
         let rate_limiter = Arc::new(RateLimiter::new(&public_key, HANDSHAKE_RATE_LIMIT));
         let peers_by_ip = Default::default();
         let next_index = Default::default();
-        let (iface_device, device_channel) = tun_device::create_iface().await?;
+        let (iface_device, device_channel) = create_iface().await?;
         let iface_device = Mutex::new(iface_device);
         let device_channel = Arc::new(device_channel);
         let peer_connections = Default::default();
