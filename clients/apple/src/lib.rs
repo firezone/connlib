@@ -1,5 +1,6 @@
 // Swift bridge generated code triggers this below
 #![allow(improper_ctypes)]
+#![cfg(any(target_os = "macos", target_os = "ios"))]
 
 use firezone_client_connlib::{
     Callbacks, Error, ErrorType, ResourceList, Session, SwiftConnlibError, SwiftErrorType,
