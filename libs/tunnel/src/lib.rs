@@ -43,9 +43,12 @@ use libs_common::{
     Result,
 };
 
-use self::tun::create_iface;
-use self::tun::DeviceChannel;
-use self::tun::IfaceDevice;
+#[cfg(target_os = "windows")]
+use win_tun as tun;
+
+use tun::create_iface;
+use tun::DeviceChannel;
+use tun::IfaceDevice;
 
 pub use webrtc::peer_connection::sdp::session_description::RTCSessionDescription;
 
@@ -59,7 +62,11 @@ mod peer;
 
 // TODO: For now all tunnel implementations are the same
 // will divide when we start introducing differences.
+#[cfg(not(target_os = "windows"))]
 mod tun;
+
+#[cfg(target_os = "windows")]
+mod win_tun;
 
 const RESET_PACKET_COUNT_INTERVAL: Duration = Duration::from_secs(1);
 const REFRESH_PEERS_TIEMRS_INTERVAL: Duration = Duration::from_secs(1);
