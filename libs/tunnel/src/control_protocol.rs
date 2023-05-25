@@ -222,6 +222,11 @@ where
         Ok(())
     }
 
+    /// Removes client's id from connections we are expecting.
+    pub fn cleanup_peer_connection(self: &Arc<Self>, client_id: Id) {
+        self.peer_connections.lock().remove(&client_id);
+    }
+
     /// Accept a connection request from a client.
     ///
     /// Sets a connection to a remote SDP, creates the local SDP

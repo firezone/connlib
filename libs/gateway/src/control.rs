@@ -2,8 +2,10 @@ use std::{sync::Arc, time::Duration};
 
 use firezone_tunnel::{ControlSignal, Tunnel};
 use libs_common::{
-    boringtun::x25519::StaticSecret, messages::ResourceDescription, Callbacks, ControlSession,
-    Result,
+    boringtun::x25519::StaticSecret,
+    error_type::ErrorType::{Fatal, Recoverable},
+    messages::ResourceDescription,
+    Callbacks, ControlSession, Result,
 };
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
@@ -51,10 +53,11 @@ where
 
     #[tracing::instrument(level = "trace", skip_all)]
     async fn init(&mut self, init: InitGateway) {
-        self.tunnel
-            .set_interface(&init.interface)
-            .await
-            .expect("Couldn't start tunnel");
+        if let Err(e) = self.tunnel.set_interface(&init.interface).await {
+            tracing::error!("Couldn't intialize interface: {e}");
+            C::on_error(&e, Fatal);
+            return;
+        }
 
         // TODO: Enable masquerading here.
         tracing::info!("Firezoned Started!");
@@ -65,7 +68,7 @@ where
         let tunnel = Arc::clone(&self.tunnel);
         let control_signaler = self.control_signaler.clone();
         tokio::spawn(async move {
-            let gateway_rtc_sdp = tunnel
+            match tunnel
                 .set_peer_connection_request(
                     connection_request.rtc_sdp,
                     connection_request.client.peer.into(),
@@ -73,15 +76,25 @@ where
                     connection_request.client.id,
                 )
                 .await
-                .expect("TODO");
-            control_signaler
-                .internal_sender
-                .send(EgressMessages::ConnectionReady(ConnectionReady {
-                    client_id: connection_request.client.id,
-                    gateway_rtc_sdp,
-                }))
-                .await
-                .expect("TODO!");
+            {
+                Ok(gateway_rtc_sdp) => {
+                    if let Err(err) = control_signaler
+                        .internal_sender
+                        .send(EgressMessages::ConnectionReady(ConnectionReady {
+                            client_id: connection_request.client.id,
+                            gateway_rtc_sdp,
+                        }))
+                        .await
+                    {
+                        tunnel.cleanup_peer_connection(connection_request.client.id);
+                        C::on_error(&err.into(), Recoverable);
+                    }
+                }
+                Err(err) => {
+                    tunnel.cleanup_peer_connection(connection_request.client.id);
+                    C::on_error(&err, Recoverable);
+                }
+            }
         });
     }
 
