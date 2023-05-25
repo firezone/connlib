@@ -34,6 +34,11 @@ jobs:
           - macos-12
           - windows-2019
           - windows-2022
+        # FIXME: There's this weird cargo thing where it stops finding the webrtc's related crates
+        # probably has to do with the cache + some cargo bug. 
+        exclude:
+          - rust: nightly
+            runs-on: ubuntu-20.04
     runs-on: ${{ matrix.runs-on }}
     steps:
       - name: Checkout
