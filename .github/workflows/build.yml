@@ -49,7 +49,22 @@ jobs:
       - name: Run cargo static analysis checks
         run: |
           cargo tree -e features -i boringtun
+          echo "common"
           cargo check -p libs-common
+          echo "macros"
+          cargo check -p macros
+          echo "gateway"
+          cargo check -p gateway
+          echo "libs client"
+          cargo check -p firezone-client-connlib
+          echo "libs tunnel"
+          cargo check -p firezone-tunnel
+          echo "libs gateway"
+          cargo check -p firezone-gateway-connlib
+          echo "libs apple"
+          cargo check -p connlib-apple
+          echo "libs android"
+          cargo check -p connlib-android
           cargo clippy -- -D clippy::all
           cargo test
 
