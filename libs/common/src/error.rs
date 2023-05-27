@@ -44,6 +44,7 @@ pub enum ConnlibError {
     #[error("Error while stablishing connection between peers")]
     ConnectionStablishError,
     /// Error regarding boringtun's devices
+    #[cfg(device)]
     #[error("Error while using boringtun's device")]
     BoringtunError(#[from] boringtun::device::Error),
     /// Error related to wireguard protocol.
