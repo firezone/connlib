@@ -74,7 +74,7 @@ mod tun;
 #[path = "device_channel_unix.rs"]
 mod device_channel;
 
-#[cfg(any(target_os = "windows"))]
+#[cfg(target_os = "windows")]
 #[path = "device_channel_windows.rs"]
 mod device_channel;
 
