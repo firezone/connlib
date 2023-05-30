@@ -164,7 +164,7 @@ fabric.properties
 
 ### AndroidStudio Patch ###
 
-!/gradle/wrapper/gradle-wrapper.jar
+!clients/android/gradle/wrapper/gradle-wrapper.jar
 
 ### Apple ###
 .DS_Store
