@@ -59,7 +59,7 @@ mod peer;
 // TODO: For now all tunnel implementations are the same
 // will divide when we start introducing differences.
 #[cfg(target_os = "windows")]
-#[path = "tun_windows.rs"]
+#[path = "tun_win.rs"]
 mod tun;
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
@@ -75,7 +75,7 @@ mod tun;
 mod device_channel;
 
 #[cfg(target_os = "windows")]
-#[path = "device_channel_windows.rs"]
+#[path = "device_channel_win.rs"]
 mod device_channel;
 
 const RESET_PACKET_COUNT_INTERVAL: Duration = Duration::from_secs(1);
