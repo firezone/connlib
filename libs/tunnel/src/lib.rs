@@ -62,10 +62,6 @@ mod peer;
 #[path = "tun_windows.rs"]
 mod tun;
 
-#[cfg(any(target_os = "windows"))]
-#[path = "device_channel_windows.rs"]
-mod device_channel;
-
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 #[path = "tun_darwin.rs"]
 mod tun;
@@ -74,8 +70,12 @@ mod tun;
 #[path = "tun_linux.rs"]
 mod tun;
 
-#[cfg(any(target_os = "macos", target_os = "ios"))]
+#[cfg(any(target_os = "macos", target_os = "ios", target_os = "linux"))]
 #[path = "device_channel_unix.rs"]
+mod device_channel;
+
+#[cfg(any(target_os = "windows"))]
+#[path = "device_channel_windows.rs"]
 mod device_channel;
 
 const RESET_PACKET_COUNT_INTERVAL: Duration = Duration::from_secs(1);

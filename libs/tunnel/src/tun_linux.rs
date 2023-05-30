@@ -95,7 +95,7 @@ impl IfaceDevice {
         }
 
         let name = name.to_string();
-        Ok(TunSocket { fd, name })
+        Ok(Self { fd, name })
     }
 
     pub fn set_non_blocking(self) -> Result<Self> {
