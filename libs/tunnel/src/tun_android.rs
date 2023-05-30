@@ -2,7 +2,10 @@ use super::InterfaceConfig;
 use libs_common::Result;
 
 #[derive(Debug)]
-pub(crate) struct IfaceConfig;
+pub(crate) struct IfaceConfig(pub(crate) Arc<IfaceDevice>);
+
+#[derive(Debug)]
+pub(crate) struct IfaceDevice;
 
 impl IfaceConfig {
     // It's easier to not make these functions async, setting these should not block the thread for too long
