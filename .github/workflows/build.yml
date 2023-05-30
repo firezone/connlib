@@ -90,7 +90,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: build assembleRelease
-          build-root-directory: android
+          build-root-directory: clients/android
       - name: Move artifact
         run: |
           mv ./clients/android/lib/build/outputs/aar/lib-release.aar ./connlib-${{ needs.draft-release.outputs.tag_name }}.aar
@@ -134,7 +134,6 @@ jobs:
           PROJECT_DIR: .
         working-directory: ./clients/apple
         run: |
-          cd apple
           # build-xcframework.sh calls build-rust.sh indirectly via `xcodebuild`, but it pollutes the environment
           # to the point that it causes the `ring` build to fail for the aarch64-apple-darwin target. So, explicitly
           # build first. See https://github.com/briansmith/ring/issues/1332
