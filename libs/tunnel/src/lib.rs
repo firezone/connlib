@@ -70,7 +70,16 @@ mod tun;
 #[path = "tun_linux.rs"]
 mod tun;
 
-#[cfg(any(target_os = "macos", target_os = "ios", target_os = "linux"))]
+#[cfg(target_os = "android")]
+#[path = "tun_android.rs"]
+mod tun;
+
+#[cfg(any(
+    target_os = "macos",
+    target_os = "ios",
+    target_os = "linux",
+    target_os = "android"
+))]
 #[path = "device_channel_unix.rs"]
 mod device_channel;
 
