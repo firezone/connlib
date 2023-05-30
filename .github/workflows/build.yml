@@ -48,30 +48,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Run cargo static analysis checks
         run: |
-          cargo tree -e features -i boringtun
-          echo "macros"
-          cargo check -p macros
-          echo "common"
-          cargo tree -e features -i boringtun -p libs-common
-          cargo check -p libs-common
-          echo "libs tunnel"
-          cargo tree -e features -i boringtun -p firezone-tunnel
-          cargo check -p firezone-tunnel
-          echo "libs gateway"
-          cargo tree -e features -i boringtun -p firezone-gateway-connlib
-          cargo check -p firezone-gateway-connlib
-          echo "libs client"
-          cargo tree -e features -i boringtun -p firezone-client-connlib
-          cargo check -p firezone-client-connlib
-          echo "gateway"
-          cargo tree -e features -i boringtun -p gateway
-          cargo check -p gateway
-          echo "libs apple"
-          cargo tree -e features -i boringtun -p connlib-apple
-          cargo check -p connlib-apple
-          echo "libs android"
-          cargo tree -e features -i boringtun -p connlib-android
-          cargo check -p connlib-android
+          cargo check --workspace
           cargo clippy -- -D clippy::all
           cargo test
 

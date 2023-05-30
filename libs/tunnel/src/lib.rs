@@ -43,12 +43,8 @@ use libs_common::{
     Result,
 };
 
-#[cfg(target_os = "windows")]
-use win_tun as tun;
-
-use tun::create_iface;
-use tun::DeviceChannel;
-use tun::IfaceDevice;
+use device_channel::{create_iface, DeviceChannel};
+use tun::IfaceConfig;
 
 pub use webrtc::peer_connection::sdp::session_description::RTCSessionDescription;
 
@@ -62,11 +58,25 @@ mod peer;
 
 // TODO: For now all tunnel implementations are the same
 // will divide when we start introducing differences.
-#[cfg(not(target_os = "windows"))]
+#[cfg(target_os = "windows")]
+#[path = "tun_windows.rs"]
 mod tun;
 
-#[cfg(target_os = "windows")]
-mod win_tun;
+#[cfg(any(target_os = "windows"))]
+#[path = "device_channel_windows.rs"]
+mod device_channel;
+
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+#[path = "tun_darwin.rs"]
+mod tun;
+
+#[cfg(target_os = "linux")]
+#[path = "tun_linux.rs"]
+mod tun;
+
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+#[path = "device_channel_unix.rs"]
+mod device_channel;
 
 const RESET_PACKET_COUNT_INTERVAL: Duration = Duration::from_secs(1);
 const REFRESH_PEERS_TIEMRS_INTERVAL: Duration = Duration::from_secs(1);
@@ -119,7 +129,7 @@ pub trait ControlSignal {
 /// to communicate between peers.
 pub struct Tunnel<C: ControlSignal, CB: Callbacks> {
     next_index: Mutex<IndexLfsr>,
-    iface_device: Mutex<IfaceDevice>,
+    iface_config: Mutex<IfaceConfig>,
     device_channel: Arc<DeviceChannel>,
     rate_limiter: Arc<RateLimiter>,
     private_key: StaticSecret,
@@ -151,8 +161,8 @@ where
         let rate_limiter = Arc::new(RateLimiter::new(&public_key, HANDSHAKE_RATE_LIMIT));
         let peers_by_ip = Default::default();
         let next_index = Default::default();
-        let (iface_device, device_channel) = create_iface().await?;
-        let iface_device = Mutex::new(iface_device);
+        let (iface_config, device_channel) = create_iface().await?;
+        let iface_config = Mutex::new(iface_config);
         let device_channel = Arc::new(device_channel);
         let peer_connections = Default::default();
         let resources = Default::default();
@@ -185,7 +195,7 @@ where
             peers_by_ip,
             next_index,
             webrtc_api,
-            iface_device,
+            iface_config,
             device_channel,
             resources,
             awaiting_connection,
@@ -213,11 +223,11 @@ where
     #[tracing::instrument(level = "trace", skip(self))]
     pub async fn set_interface(self: &Arc<Self>, config: &InterfaceConfig) -> Result<()> {
         {
-            let mut iface_device = self.iface_device.lock();
-            iface_device
+            let mut iface_config = self.iface_config.lock();
+            iface_config
                 .set_iface_config(config)
                 .expect("Couldn't initiate interface");
-            iface_device.up().expect("Couldn't initiate interface");
+            iface_config.up().expect("Couldn't initiate interface");
         }
 
         self.start_timers();
@@ -346,12 +356,12 @@ where
                     }
                     TunnResult::WriteToTunnelV4(packet, addr) => {
                         if peer.is_allowed_ipv4(&addr) {
-                            tunnel.write_device_infallible(packet).await;
+                            tunnel.write4_device_infallible(packet).await;
                         }
                     }
                     TunnResult::WriteToTunnelV6(packet, addr) => {
                         if peer.is_allowed_ipv6(&addr) {
-                            tunnel.write_device_infallible(packet).await;
+                            tunnel.write6_device_infallible(packet).await;
                         }
                     }
                 };
@@ -369,8 +379,14 @@ where
         });
     }
 
-    async fn write_device_infallible(&self, packet: &[u8]) {
-        if let Err(e) = self.device_channel.write(packet).await {
+    async fn write4_device_infallible(&self, packet: &[u8]) {
+        if let Err(e) = self.device_channel.write4(packet).await {
+            CB::on_error(&e.into(), Recoverable);
+        }
+    }
+
+    async fn write6_device_infallible(&self, packet: &[u8]) {
+        if let Err(e) = self.device_channel.write6(packet).await {
             CB::on_error(&e.into(), Recoverable);
         }
     }
