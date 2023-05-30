@@ -1,14 +1,12 @@
 use libc::{
-    close, connect, ctl_info, fcntl, getsockopt, ioctl, iovec, msghdr, recvmsg, sendmsg, sockaddr,
-    sockaddr_ctl, sockaddr_in, socket, socklen_t, AF_INET, AF_INET6, AF_SYSTEM, AF_SYS_CONTROL,
-    CTLIOCGINFO, F_GETFL, F_SETFL, IF_NAMESIZE, IPPROTO_IP, O_NONBLOCK, PF_SYSTEM, SOCK_DGRAM,
-    SOCK_STREAM, SYSPROTO_CONTROL, UTUN_OPT_IFNAME,
+    close, fcntl, ioctl, sockaddr, sockaddr_in, socket, write, AF_INET, F_GETFL, F_SETFL,
+    IFF_MULTI_QUEUE, IFF_NO_PI, IFF_TUN, IFNAMSIZ, IF_NAMESIZE, IPPROTO_IP, O_NONBLOCK, O_RDWR,
+    SIOCGIFMTU, SOCK_STREAM,
 };
 use libs_common::{Error, Result};
 use std::{
     ffi::{c_int, c_short, c_uchar},
     io,
-    mem::{size_of, size_of_val},
     os::fd::{AsRawFd, RawFd},
     sync::Arc,
 };
@@ -16,7 +14,7 @@ use std::{
 use super::InterfaceConfig;
 
 #[derive(Debug)]
-pub(crate) struct IfaceConfig;
+pub(crate) struct IfaceConfig(pub(crate) Arc<IfaceDevice>);
 
 const TUNSETIFF: u64 = 0x4004_54ca;
 const TUN_FILE: &[u8] = b"/dev/net/tun\0";
@@ -74,7 +72,7 @@ impl IfaceDevice {
 
     pub fn new(name: &str) -> Result<IfaceDevice> {
         let fd = match unsafe { open(TUN_FILE.as_ptr() as _, O_RDWR) } {
-            -1 => return Err(Error::Socket(io::Error::last_os_error())),
+            -1 => return Err(get_last_error()),
             fd => fd,
         };
 
@@ -102,7 +100,7 @@ impl IfaceDevice {
 
     pub fn set_non_blocking(self) -> Result<Self> {
         match unsafe { fcntl(self.fd, F_GETFL) } {
-            -1 => Err(Error::FCntl(io::Error::last_os_error())),
+            -1 => Err(get_last_error()),
             flags => match unsafe { fcntl(self.fd, F_SETFL, flags | O_NONBLOCK) } {
                 -1 => Err(get_last_error()),
                 _ => Ok(self),
@@ -116,11 +114,6 @@ impl IfaceDevice {
 
     /// Get the current MTU value
     pub fn mtu(&self) -> Result<usize> {
-        let provided_fd = self.name.parse::<i32>();
-        if provided_fd.is_ok() {
-            return Ok(1500);
-        }
-
         let fd = match unsafe { socket(AF_INET, SOCK_STREAM, IPPROTO_IP) } {
             -1 => return Err(get_last_error()),
             fd => fd,
