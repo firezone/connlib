@@ -1,4 +1,3 @@
-use super::InterfaceConfig;
 use crate::tun::IfaceConfig;
 use libs_common::Result;
 
