@@ -4,7 +4,7 @@ use firezone_tunnel::{ControlSignal, Tunnel};
 use libs_common::{
     boringtun::x25519::StaticSecret,
     error_type::ErrorType::{Fatal, Recoverable},
-    messages::ResourceDescription,
+    messages::{Id, ResourceDescription},
     Callbacks, ControlSession, Result,
 };
 use tokio::sync::mpsc::{channel, Receiver, Sender};
@@ -153,7 +153,11 @@ where
         Ok((sender, internal_receiver))
     }
 
-    fn mode() -> &'static str {
-        "client"
+    fn socket_path() -> &'static str {
+        "gateway"
+    }
+
+    fn external_id() -> Option<String> {
+        Some(Id::new_v4().to_string())
     }
 }

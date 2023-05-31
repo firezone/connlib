@@ -15,8 +15,11 @@ impl Callbacks for CallbackHandler {
         todo!()
     }
 
-    fn on_error(_error: &Error, _error_type: ErrorType) {
-        todo!()
+    fn on_error(error: &Error, error_type: ErrorType) {
+        match error_type {
+            ErrorType::Recoverable => tracing::warn!("Encountered error: {error}"),
+            ErrorType::Fatal => panic!("Encountered fatal error: {error}"),
+        }
     }
 }
 

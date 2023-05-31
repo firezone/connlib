@@ -6,17 +6,22 @@
 //! Entrypoint for this module is [PhoenixChannel].
 use std::{marker::PhantomData, time::Duration};
 
+use base64::Engine;
 use futures::{
     channel::mpsc::{channel, Receiver, Sender},
     TryStreamExt,
 };
 use futures_util::{Future, SinkExt, StreamExt};
+use rand_core::{OsRng, RngCore};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use tokio_tungstenite::{connect_async, tungstenite};
+use tokio_tungstenite::{
+    connect_async,
+    tungstenite::{self, handshake::client::Request},
+};
 use tungstenite::Message;
 use url::Url;
 
-use crate::Result;
+use crate::{Error, Result};
 
 const CHANNEL_SIZE: usize = 1_000;
 
@@ -43,6 +48,33 @@ pub struct PhoenixChannel<F, I> {
     _phantom: PhantomData<I>,
 }
 
+// This is basically the same as tungstenite does but we add some new headers (namely user-agent)
+fn make_request(uri: &Url) -> Result<Request> {
+    let host = uri.host().ok_or(Error::UriError)?;
+    let host = if let Some(port) = uri.port() {
+        format!("{host}:{port}")
+    } else {
+        host.to_string()
+    };
+
+    let mut r = [0u8; 16];
+    OsRng.fill_bytes(&mut r);
+    let key = base64::engine::general_purpose::STANDARD.encode(r);
+
+    let req = Request::builder()
+        .method("GET")
+        .header("Host", host)
+        .header("Connection", "Upgrade")
+        .header("Upgrade", "websocket")
+        .header("Sec-WebSocket-Version", "13")
+        .header("Sec-WebSocket-Key", key)
+        // TODO: Get OS Info here (os_info crate)
+        .header("User-Agent", "MacOs/13.3 (Mac) connlib/0.1.0")
+        .uri(uri.as_str())
+        .body(())?;
+    Ok(req)
+}
+
 impl<F, Fut, I> PhoenixChannel<F, I>
 where
     I: DeserializeOwned,
@@ -53,10 +85,10 @@ where
     ///
     /// See [struct-level docs][PhoenixChannel] for more info.
     #[tracing::instrument(level = "trace", skip(self))]
-    pub async fn start(&mut self) -> std::result::Result<(), tungstenite::Error> {
+    pub async fn start(&mut self) -> Result<()> {
         tracing::trace!("Trying to connect to the portal...");
 
-        let (ws_stream, _) = connect_async(&self.uri).await?;
+        let (ws_stream, _) = connect_async(make_request(&self.uri)?).await?;
 
         tracing::trace!("Successfully connected to portal");
 

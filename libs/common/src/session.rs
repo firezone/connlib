@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use backoff::{backoff::Backoff, ExponentialBackoffBuilder};
-use boringtun::x25519::StaticSecret;
+use boringtun::x25519::{PublicKey, StaticSecret};
 use rand_core::OsRng;
 use std::{
     marker::PhantomData,
@@ -12,7 +12,7 @@ use tokio::{
 };
 use url::Url;
 
-use crate::{control::PhoenixChannel, error_type::ErrorType, Error, Result};
+use crate::{control::PhoenixChannel, error_type::ErrorType, messages::Key, Error, Result};
 
 // TODO: Not the most tidy trait for a control-plane.
 /// Trait that represents a control-plane.
@@ -22,7 +22,10 @@ pub trait ControlSession<T, U> {
     async fn start(private_key: StaticSecret) -> Result<(Sender<T>, Receiver<U>)>;
 
     /// Either "gateway" or "client" used to ge the control-plane URL.
-    fn mode() -> &'static str;
+    fn socket_path() -> &'static str;
+
+    /// Gateways should have an external id.
+    fn external_id() -> Option<String>;
 }
 
 // TODO: Currently I'm using Session for both gateway and clients
@@ -104,6 +107,7 @@ where
     /// The generic parameter `C` should implement all the handlers and that's how errors will be surfaced.
     ///
     /// On a fatal error you should call `[Session::disconnect]` and start a new one.
+    // TODO: token should be something like SecretString but we need to think about FFI compatibiltiy
     pub fn connect<C: Callbacks>(portal_url: impl TryInto<Url>, token: String) -> Result<Self> {
         // TODO: We could use tokio::runtime::current() to get the current runtime
         // which could work with swif-rust that already runs a runtime. But IDK if that will work
@@ -120,9 +124,9 @@ where
         runtime.spawn(async move {
                 let private_key = StaticSecret::random_from_rng(OsRng);
 
-                let (sender, mut receiver) = fatal_error!(T::start(private_key).await, C);
+                let connect_url = fatal_error!(get_websocket_path(portal_url, token, T::socket_path(), &Key(PublicKey::from(&private_key).to_bytes()), T::external_id()), C);
 
-                let connect_url = fatal_error!(get_websocket_path(portal_url, token, T::mode()), C);
+                let (sender, mut receiver) = fatal_error!(T::start(private_key).await, C);
 
                 let mut connection = PhoenixChannel::new(connect_url, move |msg| {
                     let sender = sender.clone();
@@ -145,13 +149,13 @@ where
                             tokio::time::sleep(t).await;
                             match result {
                                 Ok(()) => C::on_error(&tokio_tungstenite::tungstenite::Error::ConnectionClosed.into(), ErrorType::Recoverable),
-                                Err(e) => C::on_error(&e.into(), ErrorType::Recoverable)
+                                Err(e) => C::on_error(&e, ErrorType::Recoverable)
                             }
                         } else {
                         tracing::error!("Conneciton to the portal error, check your internet or the status of the portal.\nDisconnecting interface.");
                             match result {
                                 Ok(()) => C::on_error(&crate::Error::PortalConnectionError(tokio_tungstenite::tungstenite::Error::ConnectionClosed), ErrorType::Fatal),
-                                Err(e) => C::on_error(&crate::Error::PortalConnectionError(e), ErrorType::Fatal)
+                                Err(e) => C::on_error(&e, ErrorType::Fatal)
                             }
                             break;
                         }
@@ -207,13 +211,30 @@ where
     }
 }
 
-fn get_websocket_path(mut url: Url, secret: String, mode: &str) -> Result<Url> {
+fn get_websocket_path(
+    mut url: Url,
+    secret: String,
+    mode: &str,
+    public_key: &Key,
+    external_id: Option<String>,
+) -> Result<Url> {
     {
         let mut paths = url.path_segments_mut().map_err(|_| Error::UriError)?;
         paths.pop_if_empty();
         paths.push(mode);
         paths.push("websocket");
     }
-    url.set_query(Some(&format!("secret={secret}")));
+
+    {
+        let mut query_pairs = url.query_pairs_mut();
+        query_pairs.clear();
+        query_pairs.append_pair("token", &secret);
+        query_pairs.append_pair("public_key", &public_key.to_string());
+
+        if let Some(external_id) = external_id {
+            query_pairs.append_pair("external_id", &external_id);
+        }
+    }
+
     Ok(url)
 }
