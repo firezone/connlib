@@ -31,7 +31,7 @@ pub struct Relays {
 // These messages are the messages that can be recieved
 // by a client.
 #[derive(Debug, Deserialize, Serialize, Clone)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case", tag = "event", content = "payload")]
 // TODO: We will need to re-visit webrtc-rs
 #[allow(clippy::large_enum_variant)]
 pub enum IngressMessages {

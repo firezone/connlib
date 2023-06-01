@@ -186,8 +186,4 @@ impl<C: Callbacks + Sync + Send + 'static> ControlSession<IngressMessages, Egres
     fn socket_path() -> &'static str {
         "client"
     }
-
-    fn external_id() -> Option<String> {
-        None
-    }
 }

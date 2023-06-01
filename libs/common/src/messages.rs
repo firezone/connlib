@@ -71,5 +71,7 @@ pub struct Interface {
     /// Interface's Ipv6.
     pub ipv6: Ipv6Addr,
     /// DNS that will be used to query for DNS that aren't within our resource list.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
     pub upstream_dns: Vec<IpAddr>,
 }

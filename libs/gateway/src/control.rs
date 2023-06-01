@@ -4,7 +4,7 @@ use firezone_tunnel::{ControlSignal, Tunnel};
 use libs_common::{
     boringtun::x25519::StaticSecret,
     error_type::ErrorType::{Fatal, Recoverable},
-    messages::{Id, ResourceDescription},
+    messages::ResourceDescription,
     Callbacks, ControlSession, Result,
 };
 use tokio::sync::mpsc::{channel, Receiver, Sender};
@@ -106,7 +106,7 @@ where
     #[tracing::instrument(level = "trace", skip(self))]
     pub(super) async fn handle_message(&mut self, msg: IngressMessages) {
         match msg {
-            IngressMessages::InitGateway(init) => self.init(init).await,
+            IngressMessages::Init(init) => self.init(init).await,
             IngressMessages::ConnectionRequest(connection_request) => {
                 self.connection_request(connection_request)
             }
@@ -155,9 +155,5 @@ where
 
     fn socket_path() -> &'static str {
         "gateway"
-    }
-
-    fn external_id() -> Option<String> {
-        Some(Id::new_v4().to_string())
     }
 }

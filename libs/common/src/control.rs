@@ -83,16 +83,19 @@ where
 {
     /// Starts the tunnel with the parameters given in [Self::new].
     ///
+    // (Note: we could add a generic list of messages but this is easier)
+    /// Additionally, you can add a list of topic to join after connection ASAP.
+    ///
     /// See [struct-level docs][PhoenixChannel] for more info.
     #[tracing::instrument(level = "trace", skip(self))]
-    pub async fn start(&mut self) -> Result<()> {
+    pub async fn start(&mut self, topics: Vec<String>) -> Result<()> {
         tracing::trace!("Trying to connect to the portal...");
 
         let (ws_stream, _) = connect_async(make_request(&self.uri)?).await?;
 
         tracing::trace!("Successfully connected to portal");
 
-        let (write, read) = ws_stream.split();
+        let (mut write, read) = ws_stream.split();
 
         let mut sender = self.sender();
         let Self {
@@ -103,6 +106,22 @@ where
             Self::message_process(handler, message).await;
             Ok(())
         });
+
+        // Would we like to do write.send_all(futures::stream(Message::text(...))) ?
+        // yes.
+        // but since write is taken by reference rust doesn't believe this future is sendable anymore
+        // so this works for now, since we only use it with 1 topic.
+        for topic in topics {
+            write
+                .send(Message::Text(
+                    serde_json::to_string(&PhoenixMessage::new(
+                        topic,
+                        EgressControlMessage::PhxJoin(Empty {}),
+                    ))
+                    .expect("we should always be able to serialize a join topic message"),
+                ))
+                .await?;
+        }
 
         // TODO: is Forward cancel safe?
         // I would assume it is and that's the advantage over
@@ -118,7 +137,7 @@ where
             let mut timer = tokio::time::interval(Duration::from_secs(30));
             loop {
                 timer.tick().await;
-                let Ok(_) = sender.send("phoenix", "heartbeat", Empty {}).await else {break};
+                let Ok(_) = sender.send("phoenix", EgressControlMessage::Heartbeat(Empty {})).await else {break};
             }
         });
 
@@ -143,9 +162,9 @@ where
             Ok(m_str) => match serde_json::from_str::<PhoenixMessage<I>>(&m_str) {
                 Ok(m) => match m.payload {
                     Payload::Message(m) => handler(m).await,
-                    Payload::PhoenixReply { status, .. } => {
-                        // TODO: This could be an error
-                        tracing::trace!("Recieved phoenix status message: {status}")
+                    Payload::PhoenixControl(status) => {
+                        // TODO: handle differents statuses
+                        tracing::trace!("Recieved phoenix status message: {status:?}")
                     }
                 },
                 Err(e) => {
@@ -189,27 +208,25 @@ where
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 enum Payload<T> {
-    // TODO: We should be able to extract a Result from this.
-    PhoenixReply { response: Empty, status: String },
+    PhoenixControl(IngressControlMessage),
     Message(T),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize)]
-struct PhoenixMessage<T> {
+pub struct PhoenixMessage<T> {
     topic: String,
-    event: String,
+    #[serde(flatten)]
     payload: Payload<T>,
     #[serde(rename = "ref")]
     reference: Option<i32>,
 }
 
 impl<T> PhoenixMessage<T> {
-    fn new(topic: impl Into<String>, event: impl Into<String>, payload: T) -> Self {
+    pub fn new(topic: impl Into<String>, payload: T) -> Self {
         Self {
             topic: topic.into(),
-            event: event.into(),
             payload: Payload::Message(payload),
-            reference: Some(0),
+            reference: None,
         }
     }
 }
@@ -217,6 +234,26 @@ impl<T> PhoenixMessage<T> {
 // Awful hack to get serde_json to generate an empty "{}" instead of using "null"
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Clone)]
 struct Empty {}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "snake_case", tag = "event", content = "payload")]
+enum EgressControlMessage {
+    PhxJoin(Empty),
+    Heartbeat(Empty),
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "snake_case", tag = "event", content = "payload")]
+enum IngressControlMessage {
+    PhxReply(PhxReply),
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "snake_case", tag = "status", content = "response")]
+enum PhxReply {
+    Ok(Empty),
+    Error { reason: String },
+}
 
 /// You can use this sender to send messages through a `PhoenixChannel`.
 ///
@@ -231,15 +268,9 @@ impl PhoenixSender {
     ///
     /// # Parameters
     /// - topic: Phoenix topic
-    /// - event: Phoenix event
     /// - payload: Message's payload
-    pub async fn send(
-        &mut self,
-        topic: impl Into<String>,
-        event: impl Into<String>,
-        payload: impl Serialize,
-    ) -> Result<()> {
-        let str = serde_json::to_string(&PhoenixMessage::new(topic, event, payload))?;
+    pub async fn send(&mut self, topic: impl Into<String>, payload: impl Serialize) -> Result<()> {
+        let str = serde_json::to_string(&PhoenixMessage::new(topic, payload))?;
         self.sender.send(Message::text(str)).await?;
         Ok(())
     }
@@ -247,7 +278,8 @@ impl PhoenixSender {
     /// Join a phoenix topic, meaning that after this method is invoked [PhoenixChannel] will
     /// recieve messages from that topic, given that upstream accepts you into the given topic.
     pub async fn join_topic(&mut self, topic: impl Into<String>) -> Result<()> {
-        self.send(topic, "phx_join", Empty {}).await
+        self.send(topic, EgressControlMessage::PhxJoin(Empty {}))
+            .await
     }
 
     /// Closes the [PhoenixChannel]

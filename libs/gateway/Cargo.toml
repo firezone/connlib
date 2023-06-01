@@ -10,3 +10,4 @@ firezone-tunnel = { path = "../tunnel" }
 tokio = { version = "1.27", default-features = false, features = ["sync"] }
 tracing = { version = "0.1", default-features = false, features = ["std", "attributes"] }
 serde = { version = "1.0", default-features = false, features = ["std", "derive"] }
+serde_json = { version = "1.0", default-features = false, features = ["std"] }

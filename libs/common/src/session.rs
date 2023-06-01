@@ -21,11 +21,8 @@ pub trait ControlSession<T, U> {
     /// Start control-plane with the given private-key in the background.
     async fn start(private_key: StaticSecret) -> Result<(Sender<T>, Receiver<U>)>;
 
-    /// Either "gateway" or "client" used to ge the control-plane URL.
+    /// Either "gateway" or "client" used to get the control-plane URL.
     fn socket_path() -> &'static str;
-
-    /// Gateways should have an external id.
-    fn external_id() -> Option<String>;
 }
 
 // TODO: Currently I'm using Session for both gateway and clients
@@ -123,8 +120,9 @@ where
 
         runtime.spawn(async move {
                 let private_key = StaticSecret::random_from_rng(OsRng);
+                let self_id = uuid::Uuid::new_v4();
 
-                let connect_url = fatal_error!(get_websocket_path(portal_url, token, T::socket_path(), &Key(PublicKey::from(&private_key).to_bytes()), T::external_id()), C);
+                let connect_url = fatal_error!(get_websocket_path(portal_url, token, T::socket_path(), &Key(PublicKey::from(&private_key).to_bytes()), &self_id.to_string()), C);
 
                 let (sender, mut receiver) = fatal_error!(T::start(private_key).await, C);
 
@@ -138,12 +136,15 @@ where
                     }
                 });
 
+                // Used to send internal messages
                 let mut internal_sender = connection.sender();
+                let topic = format!("{}:{}", T::socket_path(), self_id);
+                let topic_send = topic.clone();
 
                 tokio::spawn(async move {
                     let mut exponential_backoff = ExponentialBackoffBuilder::default().build();
                     loop {
-                        let result = connection.start().await;
+                        let result = connection.start(vec![topic.clone()]).await;
                         if let Some(t) = exponential_backoff.next_backoff() {
                             tracing::warn!("Error during connection to the portal, retrying in {} seconds", t.as_secs());
                             tokio::time::sleep(t).await;
@@ -167,7 +168,7 @@ where
                 // that way we can simply do receiver.forward(sender)
                 tokio::spawn(async move {
                     while let Some(message) = receiver.recv().await {
-                        if let Err(err) = internal_sender.send("TODO", "TODO", message).await {
+                        if let Err(err) = internal_sender.send(&topic_send, message).await {
                             tracing::error!("Channel already closed when trying to send message: {err}. Probably trying to send a message during session clean up.");
                         }
                     }
@@ -216,7 +217,7 @@ fn get_websocket_path(
     secret: String,
     mode: &str,
     public_key: &Key,
-    external_id: Option<String>,
+    external_id: &str,
 ) -> Result<Url> {
     {
         let mut paths = url.path_segments_mut().map_err(|_| Error::UriError)?;
@@ -230,10 +231,7 @@ fn get_websocket_path(
         query_pairs.clear();
         query_pairs.append_pair("token", &secret);
         query_pairs.append_pair("public_key", &public_key.to_string());
-
-        if let Some(external_id) = external_id {
-            query_pairs.append_pair("external_id", &external_id);
-        }
+        query_pairs.append_pair("external_id", external_id);
     }
 
     Ok(url)
