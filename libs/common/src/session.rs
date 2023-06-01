@@ -138,7 +138,7 @@ where
 
                 // Used to send internal messages
                 let mut internal_sender = connection.sender();
-                let topic = format!("{}:{}", T::socket_path(), self_id);
+                let topic = T::socket_path().to_string();
                 let topic_send = topic.clone();
 
                 tokio::spawn(async move {
@@ -153,7 +153,7 @@ where
                                 Err(e) => C::on_error(&e, ErrorType::Recoverable)
                             }
                         } else {
-                        tracing::error!("Conneciton to the portal error, check your internet or the status of the portal.\nDisconnecting interface.");
+                            tracing::error!("Conneciton to the portal error, check your internet or the status of the portal.\nDisconnecting interface.");
                             match result {
                                 Ok(()) => C::on_error(&crate::Error::PortalConnectionError(tokio_tungstenite::tungstenite::Error::ConnectionClosed), ErrorType::Fatal),
                                 Err(e) => C::on_error(&e, ErrorType::Fatal)
