@@ -246,6 +246,7 @@ enum EgressControlMessage {
 #[serde(rename_all = "snake_case", tag = "event", content = "payload")]
 enum IngressControlMessage {
     PhxReply(PhxReply),
+    PhxError(Empty),
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]

@@ -47,7 +47,8 @@ pub struct ResourceDescription {
     /// Resource's id.
     pub id: Id,
     /// Internal resource's domain name if any.
-    pub dns_name: Option<String>,
+    // TODO: this is either a dns name or a cidr
+    pub address: Option<String>,
     /// Resource's ipv4 mapping.
     ///
     /// Note that this is not the actual ipv4 for the resource not even wireguard's ipv4 for the resource.

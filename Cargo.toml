@@ -2,6 +2,7 @@
 members = [
   "clients/android",
   "clients/apple",
+  "clients/headless",
   "libs/tunnel",
   "libs/client",
   "libs/gateway",

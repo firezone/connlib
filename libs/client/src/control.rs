@@ -139,7 +139,7 @@ where
     #[tracing::instrument(level = "trace", skip(self))]
     pub(super) async fn handle_message(&mut self, msg: IngressMessages) {
         match msg {
-            IngressMessages::InitClient(init) => self.init(init).await,
+            IngressMessages::Init(init) => self.init(init).await,
             IngressMessages::Relays(connection_details) => self.relays(connection_details),
             IngressMessages::Connect(connect) => self.connect(connect).await,
             IngressMessages::AddResource(resource) => self.add_resource(resource),
@@ -184,6 +184,6 @@ impl<C: Callbacks + Sync + Send + 'static> ControlSession<IngressMessages, Egres
     }
 
     fn socket_path() -> &'static str {
-        "client"
+        "device"
     }
 }

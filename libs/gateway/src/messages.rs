@@ -126,7 +126,7 @@ mod test {
                 resources: vec![],
             }),
         );
-        println!("{}", serde_json::to_string(&m).unwrap());
+
         let message = r#"{
             "event": "init",
             "payload": {

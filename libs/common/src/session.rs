@@ -147,11 +147,11 @@ where
                         let result = connection.start(vec![topic.clone()]).await;
                         if let Some(t) = exponential_backoff.next_backoff() {
                             tracing::warn!("Error during connection to the portal, retrying in {} seconds", t.as_secs());
-                            tokio::time::sleep(t).await;
                             match result {
                                 Ok(()) => C::on_error(&tokio_tungstenite::tungstenite::Error::ConnectionClosed.into(), ErrorType::Recoverable),
                                 Err(e) => C::on_error(&e, ErrorType::Recoverable)
                             }
+                            tokio::time::sleep(t).await;
                         } else {
                             tracing::error!("Conneciton to the portal error, check your internet or the status of the portal.\nDisconnecting interface.");
                             match result {

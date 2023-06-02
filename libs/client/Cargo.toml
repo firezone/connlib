@@ -10,3 +10,6 @@ async-trait = { version = "0.1", default-features = false }
 libs-common = { path = "../common" }
 firezone-tunnel = { path = "../tunnel" }
 serde = { version = "1.0", default-features = false, features = ["std", "derive"] }
+
+[dev-dependencies]
+serde_json = { version = "1.0", default-features = false, features = ["std"] }
