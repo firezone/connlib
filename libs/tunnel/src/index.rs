@@ -21,7 +21,7 @@ impl IndexLfsr {
             let i = OsRng.next_u32() & LFSR_MAX;
             if i > 0 {
                 // LFSR seed must be non-zero
-                return i;
+                break i;
             }
         }
     }

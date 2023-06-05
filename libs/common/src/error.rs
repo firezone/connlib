@@ -14,10 +14,10 @@ pub enum ConnlibError {
     #[error(transparent)]
     Io(#[from] std::io::Error),
     /// Error while decoding a base64 value.
-    #[error("There was an error while decoding a base64 value: `{0}`")]
+    #[error("There was an error while decoding a base64 value: {0}")]
     Base64DecodeError(#[from] DecodeError),
     /// Error while decoding a base64 value from a slice.
-    #[error("There was an error while decoding a base64 value: `{0}`")]
+    #[error("There was an error while decoding a base64 value: {0}")]
     Base64DecodeSliceError(#[from] DecodeSliceError),
     /// Request error for websocket connection.
     #[error("Error forming request: {0}")]
@@ -26,7 +26,7 @@ pub enum ConnlibError {
     #[error("Portal connection error: {0}")]
     PortalConnectionError(#[from] tokio_tungstenite::tungstenite::error::Error),
     /// Provided string was not formatted as a URL.
-    #[error("Baddly formatted URI")]
+    #[error("Badly formatted URI")]
     UriError,
     /// Serde's serialize error.
     #[error(transparent)]
@@ -59,7 +59,7 @@ pub enum ConnlibError {
     #[error("Error while reading system's interface")]
     IfaceRead(std::io::Error),
     /// Glob for errors without a type.
-    #[error("Other error")]
+    #[error("Other error: {0}")]
     Other(&'static str),
     /// Invalid tunnel name
     #[error("Invalid tunnel name")]

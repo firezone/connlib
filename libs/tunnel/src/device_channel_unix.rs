@@ -23,7 +23,7 @@ impl DeviceChannel {
                     _ => panic!("Unexpected error while trying to read network interface"),
                 })
             }) {
-                Ok(result) => return result.map(|e| e.len()),
+                Ok(result) => break result.map(|e| e.len()),
                 Err(_would_block) => continue,
             }
         }
@@ -38,7 +38,7 @@ impl DeviceChannel {
                 0 => Err(std::io::Error::last_os_error()),
                 i => Ok(i),
             }) {
-                Ok(result) => return result,
+                Ok(result) => break result,
                 Err(_would_block) => continue,
             }
         }
@@ -53,7 +53,7 @@ impl DeviceChannel {
                 0 => Err(std::io::Error::last_os_error()),
                 i => Ok(i),
             }) {
-                Ok(result) => return result,
+                Ok(result) => break result,
                 Err(_would_block) => continue,
             }
         }

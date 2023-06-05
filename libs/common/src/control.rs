@@ -137,7 +137,7 @@ where
             let mut timer = tokio::time::interval(Duration::from_secs(30));
             loop {
                 timer.tick().await;
-                let Ok(_) = sender.send("phoenix", EgressControlMessage::Heartbeat(Empty {})).await else {break};
+                let Ok(_) = sender.send("phoenix", EgressControlMessage::Heartbeat(Empty {})).await else { break };
             }
         });
 

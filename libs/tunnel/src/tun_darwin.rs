@@ -38,6 +38,7 @@ impl Drop for IfaceDevice {
     }
 }
 // For some reason this is not available in libc for darwin :c
+#[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct ifreq {
     ifr_name: [c_uchar; IF_NAMESIZE],
@@ -85,7 +86,7 @@ pub fn parse_utun_name(name: &str) -> Result<u32> {
 
 impl IfaceDevice {
     fn write(&self, src: &[u8], af: u8) -> usize {
-        let mut hdr = [0u8, 0u8, 0u8, af];
+        let mut hdr = [0, 0, 0, af];
         let mut iov = [
             iovec {
                 iov_base: hdr.as_mut_ptr() as _,
@@ -123,10 +124,10 @@ impl IfaceDevice {
 
         let mut info = ctl_info {
             ctl_id: 0,
-            ctl_name: [0i8; 96],
+            ctl_name: [0; 96],
         };
         info.ctl_name[..CTRL_NAME.len()]
-            // SAFETY: We only care about mantaing the same byte value not the same value,
+            // SAFETY: We only care about maintaining the same byte value not the same value,
             // meaning that the slice &[u8] here is just a blob of bytes for us, we need this conversion
             // just because `c_char` is i8 (for some reason).
             // One thing I don't like about this is that `ctl_name` is actually a nul-terminated string,
@@ -175,7 +176,7 @@ impl IfaceDevice {
 
     pub fn name(&self) -> Result<String> {
         let mut tunnel_name = [0u8; 256];
-        let mut tunnel_name_len: socklen_t = tunnel_name.len() as u32;
+        let mut tunnel_name_len = tunnel_name.len() as socklen_t;
         if unsafe {
             getsockopt(
                 self.fd,

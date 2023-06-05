@@ -54,7 +54,7 @@ where
     #[tracing::instrument(level = "trace", skip_all)]
     async fn init(&mut self, init: InitGateway) {
         if let Err(e) = self.tunnel.set_interface(&init.interface).await {
-            tracing::error!("Couldn't intialize interface: {e}");
+            tracing::error!("Couldn't initialize interface: {e}");
             C::on_error(&e, Fatal);
             return;
         }

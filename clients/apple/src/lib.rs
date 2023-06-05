@@ -95,9 +95,9 @@ impl Callbacks for CallbackHandler {
 }
 
 impl WrappedSession {
-    fn connect(portal_url: String, token: String) -> Result<WrappedSession, SwiftConnlibError> {
+    fn connect(portal_url: String, token: String) -> Result<Self, SwiftConnlibError> {
         let session = Session::connect::<CallbackHandler>(portal_url.as_str(), token)?;
-        Ok(WrappedSession { session })
+        Ok(Self { session })
     }
 
     fn bump_sockets(&self) -> bool {

@@ -153,18 +153,16 @@ where
                     CB::on_error(&Error::ControlProtocolError, Recoverable);
                     return;
                 };
-                let peer_config = {
-                    PeerConfig {
-                        persistent_keepalive: None,
-                        public_key: gateway_public_key,
-                        ipv4: resource_description.ipv4,
-                        ipv6: resource_description.ipv6,
-                        preshared_key: p_key,
-                    }
+                let peer_config = PeerConfig {
+                    persistent_keepalive: None,
+                    public_key: gateway_public_key,
+                    ipv4: resource_description.ipv4,
+                    ipv6: resource_description.ipv6,
+                    preshared_key: p_key,
                 };
 
                 if let Err(e) = tunnel.handle_channel_open(d, index, peer_config).await {
-                    tracing::error!("Couldn't stablish wireguard link after channel was opened: {e}");
+                    tracing::error!("Couldn't establish wireguard link after channel was opened: {e}");
                     CB::on_error(&e, Recoverable);
                     tunnel.cleanup_connection(resource_id);
                 }
@@ -274,7 +272,7 @@ where
                         {
                             CB::on_error(&e, Recoverable);
                             tracing::error!(
-                                "Couldn't stablish wireguard link after opening channel: {e}"
+                                "Couldn't establish wireguard link after opening channel: {e}"
                             );
                             // Note: handle_channel_open can only error out before insert to peers_by_ip
                             // otherwise we would need to clean that up too!
@@ -294,7 +292,7 @@ where
         let local_desc = peer_connection
             .local_description()
             .await
-            .ok_or(Error::ConnectionStablishError)?;
+            .ok_or(Error::ConnectionEstablishError)?;
 
         Ok(local_desc)
     }

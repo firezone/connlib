@@ -25,7 +25,7 @@ pub(crate) struct Peer {
 impl Peer {
     pub(crate) async fn send_infallible<CB: Callbacks>(&self, data: &[u8]) {
         if let Err(e) = self.channel.write(&Bytes::copy_from_slice(data)).await {
-            tracing::error!("Couldn't send  packet to connected peer: {e}");
+            tracing::error!("Couldn't send packet to connected peer: {e}");
             CB::on_error(&e.into(), ErrorType::Recoverable);
         }
     }

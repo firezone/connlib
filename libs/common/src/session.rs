@@ -153,7 +153,7 @@ where
                             }
                             tokio::time::sleep(t).await;
                         } else {
-                            tracing::error!("Conneciton to the portal error, check your internet or the status of the portal.\nDisconnecting interface.");
+                            tracing::error!("Connection to the portal error, check your internet or the status of the portal.\nDisconnecting interface.");
                             match result {
                                 Ok(()) => C::on_error(&crate::Error::PortalConnectionError(tokio_tungstenite::tungstenite::Error::ConnectionClosed), ErrorType::Fatal),
                                 Err(e) => C::on_error(&e, ErrorType::Fatal)
