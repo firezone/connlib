@@ -40,12 +40,12 @@ const CHANNEL_SIZE: usize = 1_000;
 ///
 /// The future returned by [PhoenixChannel::start] will finish when the websocket closes (by an error), meaning that if you
 /// `await` it, it will block until you use `close` in a [PhoenixSender], the portal close the connection or something goes wrong.
-pub struct PhoenixChannel<F, I> {
+pub struct PhoenixChannel<F, I, R, M> {
     uri: Url,
     handler: F,
     sender: Sender<Message>,
     receiver: Receiver<Message>,
-    _phantom: PhantomData<I>,
+    _phantom: PhantomData<(I, R, M)>,
 }
 
 // This is basically the same as tungstenite does but we add some new headers (namely user-agent)
@@ -75,10 +75,12 @@ fn make_request(uri: &Url) -> Result<Request> {
     Ok(req)
 }
 
-impl<F, Fut, I> PhoenixChannel<F, I>
+impl<F, Fut, I, R, M> PhoenixChannel<F, I, R, M>
 where
     I: DeserializeOwned,
-    F: Fn(I) -> Fut,
+    R: DeserializeOwned,
+    M: From<I> + From<R>,
+    F: Fn(M) -> Fut,
     Fut: Future<Output = ()> + Send + 'static,
 {
     /// Starts the tunnel with the parameters given in [Self::new].
@@ -114,7 +116,8 @@ where
         for topic in topics {
             write
                 .send(Message::Text(
-                    serde_json::to_string(&PhoenixMessage::new(
+                    // We don't care about the reply type when serializing
+                    serde_json::to_string(&PhoenixMessage::<_, ()>::new(
                         topic,
                         EgressControlMessage::PhxJoin(Empty {}),
                     ))
@@ -159,13 +162,21 @@ where
         tracing::trace!("{message:?}");
 
         match message.into_text() {
-            Ok(m_str) => match serde_json::from_str::<PhoenixMessage<I>>(&m_str) {
+            Ok(m_str) => match serde_json::from_str::<PhoenixMessage<I, R>>(&m_str) {
                 Ok(m) => match m.payload {
-                    Payload::Message(m) => handler(m).await,
-                    Payload::PhoenixControl(status) => {
-                        // TODO: handle differents statuses
-                        tracing::trace!("Recieved phoenix status message: {status:?}")
-                    }
+                    Payload::Message(m) => handler(m.into()).await,
+                    Payload::Reply(status) => match status {
+                        ReplyMessage::PhxReply(phx_reply) => match phx_reply {
+                            PhxReply::Error { reason } => tracing::error!("Portal error: {reason}"),
+                            PhxReply::Ok(reply) => match reply {
+                                OkReply::NoMessage(Empty {}) => {
+                                    tracing::trace!("Phoenix status message")
+                                }
+                                OkReply::Message(m) => handler(m.into()).await,
+                            },
+                        },
+                        ReplyMessage::PhxError(Empty {}) => tracing::error!("Phoenix error"),
+                    },
                 },
                 Err(e) => {
                     tracing::error!("Error deserializing message {m_str}: {e:?}");
@@ -207,21 +218,24 @@ where
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
-enum Payload<T> {
-    PhoenixControl(IngressControlMessage),
+enum Payload<T, R> {
+    // We might want other type for the reply message
+    // but that makes everything even more convoluted!
+    // and we need to think how to make this whole mess less convoluted.
+    Reply(ReplyMessage<R>),
     Message(T),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Deserialize, Serialize)]
-pub struct PhoenixMessage<T> {
+pub struct PhoenixMessage<T, R> {
     topic: String,
     #[serde(flatten)]
-    payload: Payload<T>,
+    payload: Payload<T, R>,
     #[serde(rename = "ref")]
     reference: Option<i32>,
 }
 
-impl<T> PhoenixMessage<T> {
+impl<T, R> PhoenixMessage<T, R> {
     pub fn new(topic: impl Into<String>, payload: T) -> Self {
         Self {
             topic: topic.into(),
@@ -229,10 +243,22 @@ impl<T> PhoenixMessage<T> {
             reference: None,
         }
     }
+
+    pub fn new_reply(topic: impl Into<String>, payload: R) -> Self {
+        Self {
+            topic: topic.into(),
+            // There has to be a better way :\
+            payload: Payload::Reply(ReplyMessage::PhxReply(PhxReply::Ok(OkReply::Message(
+                payload,
+            )))),
+            reference: None,
+        }
+    }
 }
 
 // Awful hack to get serde_json to generate an empty "{}" instead of using "null"
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Clone)]
+#[serde(deny_unknown_fields)]
 struct Empty {}
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -244,15 +270,22 @@ enum EgressControlMessage {
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "snake_case", tag = "event", content = "payload")]
-enum IngressControlMessage {
-    PhxReply(PhxReply),
+enum ReplyMessage<T> {
+    PhxReply(PhxReply<T>),
     PhxError(Empty),
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[serde(untagged)]
+enum OkReply<T> {
+    Message(T),
+    NoMessage(Empty),
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "snake_case", tag = "status", content = "response")]
-enum PhxReply {
-    Ok(Empty),
+enum PhxReply<T> {
+    Ok(OkReply<T>),
     Error { reason: String },
 }
 
@@ -271,7 +304,8 @@ impl PhoenixSender {
     /// - topic: Phoenix topic
     /// - payload: Message's payload
     pub async fn send(&mut self, topic: impl Into<String>, payload: impl Serialize) -> Result<()> {
-        let str = serde_json::to_string(&PhoenixMessage::new(topic, payload))?;
+        // We don't care about the reply type when serializing
+        let str = serde_json::to_string(&PhoenixMessage::<_, ()>::new(topic, payload))?;
         self.sender.send(Message::text(str)).await?;
         Ok(())
     }

@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, sync::Arc, time::Duration};
 
-use crate::messages::{Connect, EgressMessages, IngressMessages, InitClient, Relays};
+use crate::messages::{Connect, EgressMessages, InitClient, Messages, Relays};
 use libs_common::{
     boringtun::x25519::StaticSecret,
     error_type::ErrorType::{Fatal, Recoverable},
@@ -18,7 +18,9 @@ const INTERNAL_CHANNEL_SIZE: usize = 256;
 impl ControlSignal for ControlSignaler {
     async fn signal_connection_to(&self, resource: &ResourceDescription) -> Result<()> {
         self.internal_sender
-            .send(EgressMessages::GetConnectionDetails(resource.id))
+            .send(EgressMessages::ListRelays {
+                resource_id: resource.id,
+            })
             .await?;
         Ok(())
     }
@@ -41,7 +43,7 @@ where
     C: Send + Sync + 'static,
 {
     #[tracing::instrument(level = "trace", skip(self))]
-    async fn start(mut self, mut receiver: Receiver<IngressMessages>) {
+    async fn start(mut self, mut receiver: Receiver<Messages>) {
         let mut interval = tokio::time::interval(Duration::from_secs(10));
         loop {
             tokio::select! {
@@ -67,7 +69,7 @@ where
         }
 
         for resource_description in resources {
-            self.add_resource(resource_description)
+            self.add_resource(resource_description).await
         }
 
         tracing::info!("Firezoned Started!");
@@ -92,8 +94,8 @@ where
     }
 
     #[tracing::instrument(level = "trace", skip(self))]
-    fn add_resource(&self, resource_description: ResourceDescription) {
-        self.tunnel.add_resource(resource_description);
+    async fn add_resource(&self, resource_description: ResourceDescription) {
+        self.tunnel.add_resource(resource_description).await;
     }
 
     #[tracing::instrument(level = "trace", skip(self))]
@@ -137,14 +139,14 @@ where
     }
 
     #[tracing::instrument(level = "trace", skip(self))]
-    pub(super) async fn handle_message(&mut self, msg: IngressMessages) {
+    pub(super) async fn handle_message(&mut self, msg: Messages) {
         match msg {
-            IngressMessages::Init(init) => self.init(init).await,
-            IngressMessages::Relays(connection_details) => self.relays(connection_details),
-            IngressMessages::Connect(connect) => self.connect(connect).await,
-            IngressMessages::AddResource(resource) => self.add_resource(resource),
-            IngressMessages::RemoveResource(resource) => self.remove_resource(resource.id),
-            IngressMessages::UpdateResource(resource) => self.update_resource(resource),
+            Messages::Init(init) => self.init(init).await,
+            Messages::Relays(connection_details) => self.relays(connection_details),
+            Messages::Connect(connect) => self.connect(connect).await,
+            Messages::AddResource(resource) => self.add_resource(resource).await,
+            Messages::RemoveResource(resource) => self.remove_resource(resource.id),
+            Messages::UpdateResource(resource) => self.update_resource(resource),
         }
     }
 
@@ -155,17 +157,17 @@ where
 }
 
 #[async_trait]
-impl<C: Callbacks + Sync + Send + 'static> ControlSession<IngressMessages, EgressMessages>
+impl<C: Callbacks + Sync + Send + 'static> ControlSession<Messages, EgressMessages>
     for ControlPlane<C>
 {
     #[tracing::instrument(level = "trace", skip(private_key))]
     async fn start(
         private_key: StaticSecret,
-    ) -> Result<(Sender<IngressMessages>, Receiver<EgressMessages>)> {
+    ) -> Result<(Sender<Messages>, Receiver<EgressMessages>)> {
         // This is kinda hacky, the buffer size is 1 so that we make sure that we
         // process one message at a time, blocking if a previous message haven't been processed
         // to force queue ordering.
-        let (sender, receiver) = channel::<IngressMessages>(1);
+        let (sender, receiver) = channel::<Messages>(1);
 
         let (internal_sender, internal_receiver) = channel(INTERNAL_CHANNEL_SIZE);
         let internal_sender = Arc::new(internal_sender);

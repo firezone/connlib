@@ -10,7 +10,7 @@ pub(crate) struct DeviceChannel(AsyncFd<Arc<IfaceDevice>>);
 
 impl DeviceChannel {
     pub(crate) async fn mtu(&self) -> Result<usize> {
-        self.0.get_ref().mtu()
+        self.0.get_ref().mtu().await
     }
 
     pub(crate) async fn read(&self, out: &mut [u8]) -> std::io::Result<usize> {
@@ -61,7 +61,7 @@ impl DeviceChannel {
 }
 
 pub(crate) async fn create_iface() -> Result<(IfaceConfig, DeviceChannel)> {
-    let dev = Arc::new(IfaceDevice::new("utun")?.set_non_blocking()?);
+    let dev = Arc::new(IfaceDevice::new("utun").await?.set_non_blocking()?);
     let async_dev = Arc::clone(&dev);
     let device_channel = DeviceChannel(AsyncFd::new(async_dev)?);
     let iface_config = IfaceConfig(dev);

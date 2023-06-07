@@ -31,9 +31,9 @@ pub trait ControlSession<T, U> {
 /// A session is the entry-point for connlib, mantains the runtime and the tunnel.
 ///
 /// A session is created using [Session::connect], then to stop a session we use [Session::disconnect].
-pub struct Session<T, U, V> {
+pub struct Session<T, U, V, R, M> {
     runtime: Option<Runtime>,
-    _phantom: PhantomData<(T, U, V)>,
+    _phantom: PhantomData<(T, U, V, R, M)>,
 }
 
 /// Resource list that will be displayed to the users.
@@ -76,11 +76,13 @@ macro_rules! fatal_error {
     };
 }
 
-impl<T, U, V> Session<T, U, V>
+impl<T, U, V, R, M> Session<T, U, V, R, M>
 where
-    T: ControlSession<U, V>,
+    T: ControlSession<M, V>,
     U: for<'de> serde::Deserialize<'de> + std::fmt::Debug + Send + 'static,
+    R: for<'de> serde::Deserialize<'de> + std::fmt::Debug + Send + 'static,
     V: serde::Serialize + Send + 'static,
+    M: From<U> + From<R> + Send + 'static + std::fmt::Debug,
 {
     /// Block on waiting for ctrl+c to terminate the runtime.
     /// (Used for the gateways).
@@ -126,7 +128,7 @@ where
 
                 let (sender, mut receiver) = fatal_error!(T::start(private_key).await, C);
 
-                let mut connection = PhoenixChannel::new(connect_url, move |msg| {
+                let mut connection = PhoenixChannel::<_, U, R, M>::new(connect_url, move |msg| {
                     let sender = sender.clone();
                     async move {
                         tracing::trace!("Recieved message: {msg:?}");
@@ -232,6 +234,7 @@ fn get_websocket_path(
         query_pairs.append_pair("token", &secret);
         query_pairs.append_pair("public_key", &public_key.to_string());
         query_pairs.append_pair("external_id", external_id);
+        query_pairs.append_pair("name_suffix", "todo");
     }
 
     Ok(url)

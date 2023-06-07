@@ -6,13 +6,13 @@ use libs_common::{
         x25519::{PublicKey, StaticSecret},
     },
     error_type::ErrorType::Recoverable,
-    messages::{Id, Key, RequestConnection},
+    messages::{Id, Key, Relay, RequestConnection},
     Callbacks, Error, Result,
 };
 use rand_core::OsRng;
 use webrtc::{
     data_channel::RTCDataChannel,
-    ice_transport::ice_server::RTCIceServer,
+    ice_transport::{ice_credential_type::RTCIceCredentialType, ice_server::RTCIceServer},
     peer_connection::{
         configuration::RTCConfiguration, peer_connection_state::RTCPeerConnectionState,
         sdp::session_description::RTCSessionDescription, RTCPeerConnection,
@@ -62,14 +62,23 @@ where
     #[tracing::instrument(level = "trace", skip(self))]
     async fn initialize_peer_request(
         self: &Arc<Self>,
-        relays: Vec<String>,
+        relays: Vec<Relay>,
     ) -> Result<Arc<RTCPeerConnection>> {
         let config = RTCConfiguration {
             ice_servers: relays
                 .into_iter()
-                .map(|srv| RTCIceServer {
-                    urls: vec![srv],
-                    ..Default::default()
+                .map(|srv| match srv {
+                    Relay::Stun(stun) => RTCIceServer {
+                        urls: vec![stun.uri],
+                        ..Default::default()
+                    },
+                    Relay::Turn(turn) => RTCIceServer {
+                        urls: vec![turn.uri],
+                        username: turn.username,
+                        credential: turn.password,
+                        // TODO: check what this is used for
+                        credential_type: RTCIceCredentialType::Unspecified,
+                    },
                 })
                 .collect(),
             ..Default::default()
@@ -125,7 +134,7 @@ where
     pub async fn request_connection(
         self: &Arc<Self>,
         resource_id: Id,
-        relays: Vec<String>,
+        relays: Vec<Relay>,
     ) -> Result<RequestConnection> {
         let peer_connection = self.initialize_peer_request(relays).await?;
         self.set_connection_state_update(&peer_connection);
@@ -247,7 +256,7 @@ where
         self: &Arc<Self>,
         sdp_session: RTCSessionDescription,
         peer: PeerConfig,
-        relays: Vec<String>,
+        relays: Vec<Relay>,
         client_id: Id,
     ) -> Result<RTCSessionDescription> {
         let peer_connection = self.initialize_peer_request(relays).await?;
@@ -292,7 +301,7 @@ where
         let local_desc = peer_connection
             .local_description()
             .await
-            .ok_or(Error::ConnectionEstablishError)?;
+            .ok_or(Error::ConnectionStablishError)?;
 
         Ok(local_desc)
     }

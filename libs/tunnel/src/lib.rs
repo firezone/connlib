@@ -10,7 +10,7 @@ use libs_common::{
         },
         x25519::{PublicKey, StaticSecret},
     },
-    error_type::ErrorType::Recoverable,
+    error_type::ErrorType::{Fatal, Recoverable},
     Callbacks,
 };
 
@@ -138,7 +138,9 @@ pub trait ControlSignal {
 /// to communicate between peers.
 pub struct Tunnel<C: ControlSignal, CB: Callbacks> {
     next_index: Mutex<IndexLfsr>,
-    iface_config: Mutex<IfaceConfig>,
+    // We use a tokio's mutex here since it makes things easier and we only need it
+    // during init, so the performance hit is neglibile
+    iface_config: tokio::sync::Mutex<IfaceConfig>,
     device_channel: Arc<DeviceChannel>,
     rate_limiter: Arc<RateLimiter>,
     private_key: StaticSecret,
@@ -171,7 +173,7 @@ where
         let peers_by_ip = Default::default();
         let next_index = Default::default();
         let (iface_config, device_channel) = create_iface().await?;
-        let iface_config = Mutex::new(iface_config);
+        let iface_config = tokio::sync::Mutex::new(iface_config);
         let device_channel = Arc::new(device_channel);
         let peer_connections = Default::default();
         let resources = Default::default();
@@ -218,25 +220,46 @@ where
     /// Once added, when a packet for the resource is intercepted a new data channel will be created
     /// and packets will be wrapped with wireguard and sent through it.
     #[tracing::instrument(level = "trace", skip(self))]
-    pub fn add_resource(&self, resource_description: ResourceDescription) {
-        let mut resources = self.resources.write();
-        resources.insert(
-            resource_description.id,
-            Some(ResourceKind::Addr(resource_description.ipv4)),
-            Some(ResourceKind::Addr(resource_description.ipv6)),
-            resource_description,
-        );
+    pub async fn add_resource(&self, resource_description: ResourceDescription) {
+        {
+            let mut resources = self.resources.write();
+            resources.insert(
+                resource_description.id,
+                Some(ResourceKind::Addr(resource_description.ipv4)),
+                Some(ResourceKind::Addr(resource_description.ipv6)),
+                resource_description.clone(),
+            );
+        }
+        {
+            let mut iface_config = self.iface_config.lock().await;
+            if let Err(err) = iface_config
+                .add_route(ipnet::Ipv4Net::from(resource_description.ipv4).into())
+                .await
+            {
+                CB::on_error(&err, Fatal);
+            }
+            if let Err(err) = iface_config
+                .add_route(ipnet::Ipv6Net::from(resource_description.ipv6).into())
+                .await
+            {
+                CB::on_error(&err, Fatal);
+            }
+        }
     }
 
     /// Sets the interface configuration and starts background tasks.
     #[tracing::instrument(level = "trace", skip(self))]
     pub async fn set_interface(self: &Arc<Self>, config: &InterfaceConfig) -> Result<()> {
         {
-            let mut iface_config = self.iface_config.lock();
+            let mut iface_config = self.iface_config.lock().await;
             iface_config
                 .set_iface_config(config)
+                .await
                 .expect("Couldn't initiate interface");
-            iface_config.up().expect("Couldn't initiate interface");
+            iface_config
+                .up()
+                .await
+                .expect("Couldn't initiate interface");
         }
 
         self.start_timers();

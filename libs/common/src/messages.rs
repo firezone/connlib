@@ -41,6 +41,16 @@ pub struct RequestConnection {
     pub client_rtc_sdp: RTCSessionDescription,
 }
 
+// Custom implementation of partial eq to ignore client_rtc_sdp
+impl PartialEq for RequestConnection {
+    fn eq(&self, other: &Self) -> bool {
+        self.resource_id == other.resource_id
+            && self.client_preshared_key == other.client_preshared_key
+    }
+}
+
+impl Eq for RequestConnection {}
+
 /// Description of a resource from a client's perspective.
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct ResourceDescription {
@@ -75,4 +85,36 @@ pub struct Interface {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default)]
     pub upstream_dns: Vec<IpAddr>,
+}
+
+/// A single relay
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum Relay {
+    /// STUN type of relay
+    Stun(Stun),
+    /// TURN type of relay
+    Turn(Turn),
+}
+
+/// Represent a TURN relay
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+pub struct Turn {
+    // TODO: DateTIme
+    //// Expire time of the username/password in unix millisecond timestamp UTC
+    pub expires_at: u64,
+    /// URI of the relay
+    pub uri: String,
+    /// Username for the relay
+    pub username: String,
+    // TODO: SecretString
+    /// Password for the relay
+    pub password: String,
+}
+
+/// Stun kind of relay
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+pub struct Stun {
+    /// URI for the relay
+    pub uri: String,
 }

@@ -1,7 +1,7 @@
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use firezone_tunnel::RTCSessionDescription;
-use libs_common::messages::{Id, Interface, Peer};
+use libs_common::messages::{Id, Interface, Peer, Relay};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize, Clone)]
@@ -25,7 +25,7 @@ pub struct ConnectionRequest {
     pub user_id: Id,
     pub client: Client,
     pub rtc_sdp: RTCSessionDescription,
-    pub relays: Vec<String>,
+    pub relays: Vec<Relay>,
     pub resource: Resource,
 }
 
@@ -140,7 +140,7 @@ mod test {
             "ref": null,
             "topic": "gateway:83d28051-324e-48fe-98ed-19690899b3b6"
         }"#;
-        let ingress_message: PhoenixMessage<IngressMessages> =
+        let ingress_message: PhoenixMessage<IngressMessages, ()> =
             serde_json::from_str(message).unwrap();
         assert_eq!(m, ingress_message);
     }
