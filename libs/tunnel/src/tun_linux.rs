@@ -1,5 +1,5 @@
 use futures::TryStreamExt;
-use ipnet::IpNet;
+use ip_network::IpNetwork;
 use libc::{
     close, fcntl, ioctl, open, read, sockaddr, sockaddr_in, write, F_GETFL, F_SETFL,
     IFF_MULTI_QUEUE, IFF_NO_PI, IFF_TUN, IFNAMSIZ, O_NONBLOCK, O_RDWR,
@@ -178,7 +178,7 @@ fn get_last_error() -> Error {
 }
 
 impl IfaceConfig {
-    pub async fn add_route(&mut self, route: IpNet) -> Result<()> {
+    pub async fn add_route(&mut self, route: IpNetwork) -> Result<()> {
         let req = self
             .0
             .handle
@@ -188,17 +188,17 @@ impl IfaceConfig {
             .protocol(RT_PROT_UNSPEC)
             .scope(RT_SCOPE_LINK);
         match route {
-            IpNet::V4(ipnet) => {
+            IpNetwork::V4(ipnet) => {
                 req.v4()
-                    .source_prefix(ipnet.addr(), ipnet.prefix_len())
-                    .destination_prefix(ipnet.addr(), ipnet.prefix_len())
+                    .source_prefix(ipnet.network_address(), ipnet.netmask())
+                    .destination_prefix(ipnet.network_address(), ipnet.netmask())
                     .execute()
                     .await?
             }
-            IpNet::V6(ipnet) => {
+            IpNetwork::V6(ipnet) => {
                 req.v6()
-                    .source_prefix(ipnet.addr(), ipnet.prefix_len())
-                    .destination_prefix(ipnet.addr(), ipnet.prefix_len())
+                    .source_prefix(ipnet.network_address(), ipnet.netmask())
+                    .destination_prefix(ipnet.network_address(), ipnet.netmask())
                     .execute()
                     .await?
             }

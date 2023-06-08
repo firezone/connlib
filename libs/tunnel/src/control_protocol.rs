@@ -51,8 +51,9 @@ where
 
         {
             let mut peers_by_ip = self.peers_by_ip.write();
-            peers_by_ip.insert(peer_config.ipv4.into(), Arc::clone(&peer));
-            peers_by_ip.insert(peer_config.ipv6.into(), Arc::clone(&peer));
+            for ip in peer_config.ips {
+                peers_by_ip.insert(ip, Arc::clone(&peer));
+            }
         }
 
         self.start_peer_handler(Arc::clone(&peer));
@@ -77,7 +78,7 @@ where
                         username: turn.username,
                         credential: turn.password,
                         // TODO: check what this is used for
-                        credential_type: RTCIceCredentialType::Unspecified,
+                        credential_type: RTCIceCredentialType::Password,
                     },
                 })
                 .collect(),
@@ -149,7 +150,7 @@ where
         let resource_description = tunnel
             .resources
             .read()
-            .get_main(&resource_id)
+            .get_by_id(&resource_id)
             .expect("TODO")
             .clone();
         data_channel.on_open(Box::new(move || {
@@ -165,8 +166,7 @@ where
                 let peer_config = PeerConfig {
                     persistent_keepalive: None,
                     public_key: gateway_public_key,
-                    ipv4: resource_description.ipv4,
-                    ipv6: resource_description.ipv6,
+                    ips: resource_description.ips(),
                     preshared_key: p_key,
                 };
 
@@ -196,8 +196,8 @@ where
 
         Ok(RequestConnection {
             resource_id,
-            client_preshared_key: Key(preshared_key.to_bytes()),
-            client_rtc_sdp: local_description,
+            device_preshared_key: Key(preshared_key.to_bytes()),
+            device_rtc_session_description: local_description,
         })
     }
 

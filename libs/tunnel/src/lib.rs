@@ -2,6 +2,8 @@
 //!
 //! This is both the wireguard and ICE implementation that should work in tandem.
 //! [Tunnel] is the  main entry-point for this crate.
+use ip_network::IpNetwork;
+use ip_network_table::IpNetworkTable;
 use libs_common::{
     boringtun::{
         noise::{
@@ -19,6 +21,7 @@ use bytes::Bytes;
 use itertools::Itertools;
 use parking_lot::{Mutex, RwLock};
 use peer::Peer;
+use resource_table::ResourceTable;
 use tokio::time::MissedTickBehavior;
 use webrtc::{
     api::{
@@ -31,9 +34,8 @@ use webrtc::{
 
 use std::{
     collections::{HashMap, HashSet},
-    hash::Hash,
     marker::PhantomData,
-    net::{IpAddr, Ipv4Addr, Ipv6Addr},
+    net::IpAddr,
     sync::Arc,
     time::Duration,
 };
@@ -49,12 +51,11 @@ use tun::IfaceConfig;
 pub use webrtc::peer_connection::sdp::session_description::RTCSessionDescription;
 
 use index::{check_packet_index, IndexLfsr};
-use multimap::MultiMap;
 
 mod control_protocol;
 mod index;
-mod multimap;
 mod peer;
+mod resource_table;
 
 // TODO: For now all tunnel implementations are the same
 // will divide when we start introducing differences.
@@ -94,20 +95,13 @@ const REFRESH_PEERS_TIEMRS_INTERVAL: Duration = Duration::from_secs(1);
 const HANDSHAKE_RATE_LIMIT: u64 = 100;
 const MAX_UDP_SIZE: usize = (1 << 16) - 1;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-enum ResourceKind<T> {
-    _Name(String),
-    Addr(T),
-}
-
 /// Represent's the tunnel actual peer's config
 /// Obtained from libs_common's Peer
 #[derive(Clone)]
 pub struct PeerConfig {
     pub(crate) persistent_keepalive: Option<u16>,
     pub(crate) public_key: PublicKey,
-    pub(crate) ipv4: Ipv4Addr,
-    pub(crate) ipv6: Ipv6Addr,
+    pub(crate) ips: Vec<IpNetwork>,
     pub(crate) preshared_key: StaticSecret,
 }
 
@@ -116,8 +110,7 @@ impl From<libs_common::messages::Peer> for PeerConfig {
         Self {
             persistent_keepalive: value.persistent_keepalive,
             public_key: value.public_key.0.into(),
-            ipv4: value.ipv4,
-            ipv6: value.ipv6,
+            ips: vec![value.ipv4.into(), value.ipv6.into()],
             preshared_key: value.preshared_key.0.into(),
         }
     }
@@ -145,12 +138,11 @@ pub struct Tunnel<C: ControlSignal, CB: Callbacks> {
     rate_limiter: Arc<RateLimiter>,
     private_key: StaticSecret,
     public_key: PublicKey,
-    peers_by_ip: RwLock<HashMap<IpAddr, Arc<Peer>>>,
+    peers_by_ip: RwLock<IpNetworkTable<Arc<Peer>>>,
     peer_connections: Mutex<HashMap<Id, Arc<RTCPeerConnection>>>,
     awaiting_connection: Mutex<HashSet<Id>>,
     webrtc_api: API,
-    resources:
-        RwLock<MultiMap<Id, ResourceKind<Ipv4Addr>, ResourceKind<Ipv6Addr>, ResourceDescription>>,
+    resources: RwLock<ResourceTable>,
     control_signaler: C,
     gateway_public_keys: Mutex<HashMap<Id, PublicKey>>,
     _phantom: PhantomData<CB>,
@@ -170,7 +162,7 @@ where
     pub async fn new(private_key: StaticSecret, control_signaler: C) -> Result<Self> {
         let public_key = (&private_key).into();
         let rate_limiter = Arc::new(RateLimiter::new(&public_key, HANDSHAKE_RATE_LIMIT));
-        let peers_by_ip = Default::default();
+        let peers_by_ip = RwLock::new(IpNetworkTable::new());
         let next_index = Default::default();
         let (iface_config, device_channel) = create_iface().await?;
         let iface_config = tokio::sync::Mutex::new(iface_config);
@@ -222,29 +214,14 @@ where
     #[tracing::instrument(level = "trace", skip(self))]
     pub async fn add_resource(&self, resource_description: ResourceDescription) {
         {
-            let mut resources = self.resources.write();
-            resources.insert(
-                resource_description.id,
-                Some(ResourceKind::Addr(resource_description.ipv4)),
-                Some(ResourceKind::Addr(resource_description.ipv6)),
-                resource_description.clone(),
-            );
-        }
-        {
             let mut iface_config = self.iface_config.lock().await;
-            if let Err(err) = iface_config
-                .add_route(ipnet::Ipv4Net::from(resource_description.ipv4).into())
-                .await
-            {
-                CB::on_error(&err, Fatal);
-            }
-            if let Err(err) = iface_config
-                .add_route(ipnet::Ipv6Net::from(resource_description.ipv6).into())
-                .await
-            {
-                CB::on_error(&err, Fatal);
+            for ip in resource_description.ips() {
+                if let Err(err) = iface_config.add_route(ip).await {
+                    CB::on_error(&err, Fatal);
+                }
             }
         }
+        self.resources.write().insert(resource_description);
     }
 
     /// Sets the interface configuration and starts background tasks.
@@ -308,7 +285,8 @@ where
                 let peers: Vec<_> = tunnel
                     .peers_by_ip
                     .read()
-                    .values()
+                    .iter()
+                    .map(|p| p.1)
                     .unique_by(|p| p.index)
                     .cloned()
                     .collect();
@@ -387,12 +365,12 @@ where
                         peer.send_infallible::<CB>(packet).await;
                     }
                     TunnResult::WriteToTunnelV4(packet, addr) => {
-                        if peer.is_allowed_ipv4(&addr) {
+                        if peer.is_allowed(addr) {
                             tunnel.write4_device_infallible(packet).await;
                         }
                     }
                     TunnResult::WriteToTunnelV6(packet, addr) => {
-                        if peer.is_allowed_ipv6(&addr) {
+                        if peer.is_allowed(addr) {
                             tunnel.write6_device_infallible(packet).await;
                         }
                     }
@@ -428,12 +406,8 @@ where
         let addr = Tunn::dst_address(buff)?;
         let resources = self.resources.read();
         match addr {
-            IpAddr::V4(ipv4) => resources
-                .get_by_helper_1(&ResourceKind::Addr(ipv4))
-                .cloned(),
-            IpAddr::V6(ipv6) => resources
-                .get_by_helper_2(&ResourceKind::Addr(ipv6))
-                .cloned(),
+            IpAddr::V4(ipv4) => resources.get_by_ip(ipv4).cloned(),
+            IpAddr::V6(ipv6) => resources.get_by_ip(ipv6).cloned(),
         }
     }
 
@@ -472,7 +446,7 @@ where
 
                 let (encapsulate_result, channel) = {
                     let peers_by_ip = dev.peers_by_ip.read();
-                    match peers_by_ip.get(&dst_addr) {
+                    match peers_by_ip.longest_match(dst_addr).map(|p| p.1) {
                         Some(peer) => (
                             peer.tunnel.lock().encapsulate(&src[..res], &mut dst[..]),
                             peer.channel.clone(),
@@ -484,7 +458,7 @@ where
                                 // create_peer_connection hasn't added the thing to peer_connections
                                 // and we are finding another packet to the same address (otherwise we would just use peer_connections here)
                                 let mut awaiting_connection = dev.awaiting_connection.lock();
-                                let id = resource.id;
+                                let id = resource.id();
                                 if !awaiting_connection.contains(&id) {
                                     tracing::trace!("Found new intent to send packets to resource with resource-ip: {dst_addr}, initalizing conection...");
 

@@ -1,9 +1,8 @@
-use std::{
-    net::{Ipv4Addr, Ipv6Addr},
-    sync::Arc,
-};
+use std::{net::IpAddr, sync::Arc};
 
 use bytes::Bytes;
+use ip_network::IpNetwork;
+use ip_network_table::IpNetworkTable;
 use libs_common::{
     boringtun::noise::{Tunn, TunnResult},
     error_type::ErrorType,
@@ -15,11 +14,10 @@ use webrtc::data::data_channel::DataChannel;
 use super::PeerConfig;
 
 pub(crate) struct Peer {
-    pub(crate) tunnel: Mutex<Tunn>,
-    pub(crate) index: u32,
-    pub(crate) allowed_ipv4: Ipv4Addr,
-    pub(crate) allowed_ipv6: Ipv6Addr,
-    pub(crate) channel: Arc<DataChannel>,
+    pub tunnel: Mutex<Tunn>,
+    pub index: u32,
+    pub allowed_ips: IpNetworkTable<()>,
+    pub channel: Arc<DataChannel>,
 }
 
 impl Peer {
@@ -36,21 +34,23 @@ impl Peer {
         config: &PeerConfig,
         channel: Arc<DataChannel>,
     ) -> Self {
-        Self::new(Mutex::new(tunnel), index, config.ipv4, config.ipv6, channel)
+        Self::new(Mutex::new(tunnel), index, config.ips.clone(), channel)
     }
 
     pub(crate) fn new(
         tunnel: Mutex<Tunn>,
         index: u32,
-        ipv4: Ipv4Addr,
-        ipv6: Ipv6Addr,
+        ips: Vec<IpNetwork>,
         channel: Arc<DataChannel>,
     ) -> Peer {
+        let mut allowed_ips = IpNetworkTable::new();
+        for ip in ips {
+            allowed_ips.insert(ip, ());
+        }
         Peer {
             tunnel,
             index,
-            allowed_ipv4: ipv4,
-            allowed_ipv6: ipv6,
+            allowed_ips,
             channel,
         }
     }
@@ -59,11 +59,7 @@ impl Peer {
         self.tunnel.lock().update_timers(dst)
     }
 
-    pub(crate) fn is_allowed_ipv4(&self, addr: &Ipv4Addr) -> bool {
-        &self.allowed_ipv4 == addr
-    }
-
-    pub(crate) fn is_allowed_ipv6(&self, addr: &Ipv6Addr) -> bool {
-        &self.allowed_ipv6 == addr
+    pub(crate) fn is_allowed(&self, addr: impl Into<IpAddr>) -> bool {
+        self.allowed_ips.longest_match(addr).is_some()
     }
 }

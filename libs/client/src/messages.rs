@@ -111,12 +111,17 @@ pub enum EgressMessages {
 mod test {
     use libs_common::{
         control::PhoenixMessage,
-        messages::{Interface, Relay, ResourceDescription, Stun, Turn},
+        messages::{
+            Interface, Relay, ResourceDescription, ResourceDescriptionCidr, ResourceDescriptionDns,
+            Stun, Turn,
+        },
     };
 
     use crate::messages::{EgressMessages, Relays, ReplyMessages};
 
     use super::{IngressMessages, InitClient};
+
+    // TODO: request_connection tests
 
     #[test]
     fn init_phoenix_message() {
@@ -124,44 +129,55 @@ mod test {
             "device",
             IngressMessages::Init(InitClient {
                 interface: Interface {
-                    ipv4: "100.76.112.111".parse().unwrap(),
+                    ipv4: "100.72.112.111".parse().unwrap(),
                     ipv6: "fd00:2011:1111::13:efb9".parse().unwrap(),
                     upstream_dns: vec![],
                 },
                 resources: vec![
-                    ResourceDescription {
-                        id: "030c2869-6e0d-4dc1-a186-5f1962a1a02b".parse().unwrap(),
-                        address: Some("172.172.0.1/16".to_string()),
-                        ipv4: "100.69.89.84".parse().unwrap(),
-                        ipv6: "fd00:2011:1111::1f:5317".parse().unwrap(),
-                    },
-                    ResourceDescription {
-                        id: "a25fce02-de8e-48e0-b664-287623cfa85e".parse().unwrap(),
-                        address: Some("gitlab.mycorp.com".to_string()),
-                        ipv4: "100.72.207.207".parse().unwrap(),
-                        ipv6: "fd00:2011:1111::1b:3120".parse().unwrap(),
-                    },
+                    ResourceDescription::Cidr(ResourceDescriptionCidr {
+                        id: "73037362-715d-4a83-a749-f18eadd970e6".parse().unwrap(),
+                        address: "172.172.0.0/16".parse().unwrap(),
+                        name: "172.172.0.0/16".to_string(),
+                    }),
+                    ResourceDescription::Dns(ResourceDescriptionDns {
+                        id: "03000143-e25e-45c7-aafb-144990e57dcd".parse().unwrap(),
+                        address: "gitlab.mycorp.com".to_string(),
+                        ipv4: "100.126.44.50".parse().unwrap(),
+                        ipv6: "fd00:2011:1111::e:7758".parse().unwrap(),
+                        name: "gitlab.mycorp.com".to_string(),
+                    }),
                 ],
             }),
         );
-        let message = r#"
-            {
-                "event": "init",
-                "payload": {
-                    "interface": {
-                        "ipv4": "100.76.112.111",
-                        "ipv6": "fd00:2011:1111::13:efb9",
-                        "upstream_dns": []
-                    },
-                    "resources": [ 
-                        {"address": "172.172.0.1/16", "id": "030c2869-6e0d-4dc1-a186-5f1962a1a02b", "ipv4": "100.69.89.84", "ipv6": "fd00:2011:1111::1f:5317"},
-                        {"address": "gitlab.mycorp.com", "id": "a25fce02-de8e-48e0-b664-287623cfa85e", "ipv4": "100.72.207.207", "ipv6": "fd00:2011:1111::1b:3120"}
-                    ]
+        println!("{}", serde_json::to_string(&m).unwrap());
+        let message = r#"{
+            "event": "init",
+            "payload": {
+                "interface": {
+                    "ipv4": "100.72.112.111",
+                    "ipv6": "fd00:2011:1111::13:efb9",
+                    "upstream_dns": []
                 },
-                "ref":null,
-                "topic": "device"
-            }
-        "#;
+                "resources": [
+                    {
+                        "address": "172.172.0.0/16",
+                        "id": "73037362-715d-4a83-a749-f18eadd970e6",
+                        "name": "172.172.0.0/16",
+                        "type": "cidr"
+                    },
+                    {
+                        "address": "gitlab.mycorp.com",
+                        "id": "03000143-e25e-45c7-aafb-144990e57dcd",
+                        "ipv4": "100.126.44.50",
+                        "ipv6": "fd00:2011:1111::e:7758",
+                        "name": "gitlab.mycorp.com",
+                        "type": "dns"
+                    }
+                ]
+            },
+            "ref": null,
+            "topic": "device"
+        }"#;
         let ingress_message: PhoenixMessage<IngressMessages, ReplyMessages> =
             serde_json::from_str(message).unwrap();
         assert_eq!(m, ingress_message);
@@ -217,7 +233,6 @@ mod test {
                 ],
             }),
         );
-        println!("{}", serde_json::to_string(&m).unwrap());
         let message = r#"
             {
                 "ref":null,

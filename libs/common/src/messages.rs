@@ -1,6 +1,7 @@
 //! Message types that are used by both the gateway and client.
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
+use ip_network::IpNetwork;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use webrtc::peer_connection::sdp::session_description::RTCSessionDescription;
@@ -36,29 +37,35 @@ pub struct RequestConnection {
     /// Resource id the request is for.
     pub resource_id: Id,
     /// The preshared key the client generated for the connection that it is trying to establish.
-    pub client_preshared_key: Key,
+    pub device_preshared_key: Key,
     /// Client's local RTC Session Description that the client will use for this connection.
-    pub client_rtc_sdp: RTCSessionDescription,
+    pub device_rtc_session_description: RTCSessionDescription,
 }
 
 // Custom implementation of partial eq to ignore client_rtc_sdp
 impl PartialEq for RequestConnection {
     fn eq(&self, other: &Self) -> bool {
         self.resource_id == other.resource_id
-            && self.client_preshared_key == other.client_preshared_key
+            && self.device_preshared_key == other.device_preshared_key
     }
 }
 
 impl Eq for RequestConnection {}
 
-/// Description of a resource from a client's perspective.
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
-pub struct ResourceDescription {
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum ResourceDescription {
+    Dns(ResourceDescriptionDns),
+    Cidr(ResourceDescriptionCidr),
+}
+
+/// Description of a resource that maps to a DNS record.
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+pub struct ResourceDescriptionDns {
     /// Resource's id.
     pub id: Id,
-    /// Internal resource's domain name if any.
-    // TODO: this is either a dns name or a cidr
-    pub address: Option<String>,
+    /// Internal resource's domain name.
+    pub address: String,
     /// Resource's ipv4 mapping.
     ///
     /// Note that this is not the actual ipv4 for the resource not even wireguard's ipv4 for the resource.
@@ -69,6 +76,39 @@ pub struct ResourceDescription {
     /// Note that this is not the actual ipv6 for the resource not even wireguard's ipv6 for the resource.
     /// This is just the mapping we use internally between a resource and its ip for intercepting packets.
     pub ipv6: Ipv6Addr,
+    /// Name of the resource.
+    ///
+    /// Used only for display.
+    pub name: String,
+}
+
+impl ResourceDescription {
+    pub fn ips(&self) -> Vec<IpNetwork> {
+        match self {
+            ResourceDescription::Dns(r) => vec![r.ipv4.into(), r.ipv6.into()],
+            ResourceDescription::Cidr(r) => vec![r.address],
+        }
+    }
+
+    pub fn id(&self) -> Id {
+        match self {
+            ResourceDescription::Dns(r) => r.id,
+            ResourceDescription::Cidr(r) => r.id,
+        }
+    }
+}
+
+/// Description of a resource that maps to a CIDR.
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+pub struct ResourceDescriptionCidr {
+    /// Resource's id.
+    pub id: Id,
+    /// CIDR that this resource points to.
+    pub address: IpNetwork,
+    /// Name of the resource.
+    ///
+    /// Used only for display.
+    pub name: String,
 }
 
 /// Represents a wireguard interface configuration.

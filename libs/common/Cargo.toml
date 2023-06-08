@@ -24,6 +24,7 @@ rand_core = { version = "0.6.4", default-features = false, features = ["std"] }
 async-trait = { version = "0.1", default-features = false }
 backoff = { version = "0.4", default-features = false }
 boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "878385f", default-features = false }
+ip_network = { version = "0.4", default-features = false, features = ["serde"] }
 
 macros = { path = "../../macros" }
 

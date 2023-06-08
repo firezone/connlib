@@ -167,7 +167,8 @@ where
                     Payload::Message(m) => handler(m.into()).await,
                     Payload::Reply(status) => match status {
                         ReplyMessage::PhxReply(phx_reply) => match phx_reply {
-                            PhxReply::Error { reason } => tracing::error!("Portal error: {reason}"),
+                            // TODO: Here we should pass error info to a subscriber
+                            PhxReply::Error(info) => tracing::error!("Portal error: {info:?}"),
                             PhxReply::Ok(reply) => match reply {
                                 OkReply::NoMessage(Empty {}) => {
                                     tracing::trace!("Phoenix status message")
@@ -283,10 +284,17 @@ enum OkReply<T> {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum ErrorInfo {
+    Reason(String),
+    Offline,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 #[serde(rename_all = "snake_case", tag = "status", content = "response")]
 enum PhxReply<T> {
     Ok(OkReply<T>),
-    Error { reason: String },
+    Error(ErrorInfo),
 }
 
 /// You can use this sender to send messages through a `PhoenixChannel`.

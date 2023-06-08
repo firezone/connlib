@@ -19,7 +19,7 @@ impl ControlSignal for ControlSignaler {
     async fn signal_connection_to(&self, resource: &ResourceDescription) -> Result<()> {
         self.internal_sender
             .send(EgressMessages::ListRelays {
-                resource_id: resource.id,
+                resource_id: resource.id(),
             })
             .await?;
         Ok(())
