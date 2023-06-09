@@ -77,7 +77,7 @@ public class Adapter {
   /// Start the tunnel tunnel.
   /// - Parameters:
   ///   - completionHandler: completion handler.
-  public func start(completionHandler: @escaping (AdapterError?) -> Void) throws {
+  public func start(portalURL: String, token: String, completionHandler: @escaping (AdapterError?) -> Void) throws {
     workQueue.async {
       guard case .stopped = self.state else {
         completionHandler(.invalidState)
@@ -95,8 +95,8 @@ public class Adapter {
 
         self.state = .started(
           WrappedSession.connect(
-            "http://localhost:4568",
-            "test-token",
+            portalURL,
+            token,
             Self.callbackHandler!
           )
         )
