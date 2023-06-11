@@ -144,9 +144,9 @@ where
             Messages::Init(init) => self.init(init).await,
             Messages::Relays(connection_details) => self.relays(connection_details),
             Messages::Connect(connect) => self.connect(connect).await,
-            Messages::AddResource(resource) => self.add_resource(resource).await,
-            Messages::RemoveResource(resource) => self.remove_resource(resource.id),
-            Messages::UpdateResource(resource) => self.update_resource(resource),
+            Messages::ResourceAdded(resource) => self.add_resource(resource).await,
+            Messages::ResourceRemoved(resource) => self.remove_resource(resource.id),
+            Messages::ResourceUpdated(resource) => self.update_resource(resource),
         }
     }
 

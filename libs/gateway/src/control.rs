@@ -10,7 +10,7 @@ use libs_common::{
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 use super::messages::{
-    ConnectionReady, ConnectionRequest, EgressMessages, IngressMessages, InitGateway, Resource,
+    ConnectionReady, EgressMessages, IngressMessages, InitGateway, RequestConnection,
 };
 
 use async_trait::async_trait;
@@ -64,16 +64,16 @@ where
     }
 
     #[tracing::instrument(level = "trace", skip(self))]
-    fn connection_request(&self, connection_request: ConnectionRequest) {
+    fn connection_request(&self, connection_request: RequestConnection) {
         let tunnel = Arc::clone(&self.tunnel);
         let control_signaler = self.control_signaler.clone();
         tokio::spawn(async move {
             match tunnel
                 .set_peer_connection_request(
-                    connection_request.rtc_sdp,
-                    connection_request.client.peer.into(),
+                    connection_request.device.rtc_session_description,
+                    connection_request.device.peer.into(),
                     connection_request.relays,
-                    connection_request.client.id,
+                    connection_request.device.id,
                 )
                 .await
             {
@@ -81,17 +81,17 @@ where
                     if let Err(err) = control_signaler
                         .internal_sender
                         .send(EgressMessages::ConnectionReady(ConnectionReady {
-                            client_id: connection_request.client.id,
+                            client_id: connection_request.device.id,
                             gateway_rtc_sdp,
                         }))
                         .await
                     {
-                        tunnel.cleanup_peer_connection(connection_request.client.id);
+                        tunnel.cleanup_peer_connection(connection_request.device.id);
                         C::on_error(&err.into(), Recoverable);
                     }
                 }
                 Err(err) => {
-                    tunnel.cleanup_peer_connection(connection_request.client.id);
+                    tunnel.cleanup_peer_connection(connection_request.device.id);
                     C::on_error(&err, Recoverable);
                 }
             }
@@ -99,7 +99,7 @@ where
     }
 
     #[tracing::instrument(level = "trace", skip(self))]
-    fn add_resource(&self, resource: Resource) {
+    fn add_resource(&self, resource: ResourceDescription) {
         todo!()
     }
 
@@ -107,7 +107,7 @@ where
     pub(super) async fn handle_message(&mut self, msg: IngressMessages) {
         match msg {
             IngressMessages::Init(init) => self.init(init).await,
-            IngressMessages::ConnectionRequest(connection_request) => {
+            IngressMessages::RequestConnection(connection_request) => {
                 self.connection_request(connection_request)
             }
             IngressMessages::AddResource(resource) => self.add_resource(resource),

@@ -1,59 +1,51 @@
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::net::IpAddr;
 
 use firezone_tunnel::RTCSessionDescription;
-use libs_common::messages::{Id, Interface, Peer, Relay};
+use libs_common::messages::{Id, Interface, Peer, Relay, ResourceDescription};
 use serde::{Deserialize, Serialize};
 
+// TODO: Should this have a resource?
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize, Clone)]
 pub struct InitGateway {
     pub interface: Interface,
     pub ipv4_masquerade_enabled: bool,
     pub ipv6_masquerade_enabled: bool,
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    #[serde(default)]
-    pub resources: Vec<Resource>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
-pub struct Client {
+pub struct Actor {
     pub id: Id,
-    pub peer: Peer,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct ConnectionRequest {
-    pub user_id: Id,
-    pub client: Client,
-    pub rtc_sdp: RTCSessionDescription,
-    pub relays: Vec<Relay>,
-    pub resource: Resource,
+pub struct Device {
+    pub id: Id,
+    pub rtc_session_description: RTCSessionDescription,
+    pub peer: Peer,
 }
 
 // rtc_sdp is ignored from eq since RTCSessionDescription doesn't implement this
 // this will probably be changed in the future.
-impl PartialEq for ConnectionRequest {
+impl PartialEq for Device {
     fn eq(&self, other: &Self) -> bool {
-        self.user_id == other.user_id
-            && self.client == other.client
-            && self.relays == other.relays
-            && self.resource == other.resource
+        self.id == other.id && self.peer == other.peer
     }
 }
 
-impl Eq for ConnectionRequest {}
+impl Eq for Device {}
+
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+pub struct RequestConnection {
+    pub actor: Actor,
+    pub relays: Vec<Relay>,
+    pub resource: ResourceDescription,
+    pub device: Device,
+}
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub enum Destination {
     DnsName(String),
     Ip(Vec<IpAddr>),
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
-pub struct Resource {
-    pub id: Id,
-    pub internal_ipv4: Option<Ipv4Addr>,
-    pub internal_ipv6: Option<Ipv6Addr>,
-    pub resource_address: Destination,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
@@ -82,10 +74,10 @@ pub struct RemoveResource {
 #[allow(clippy::large_enum_variant)]
 pub enum IngressMessages {
     Init(InitGateway),
-    ConnectionRequest(ConnectionRequest),
-    AddResource(Resource),
+    RequestConnection(RequestConnection),
+    AddResource(ResourceDescription),
     RemoveResource(RemoveResource),
-    UpdateResource(Resource),
+    UpdateResource(ResourceDescription),
 }
 
 // These messages can be sent from a gateway
@@ -123,7 +115,6 @@ mod test {
                 },
                 ipv4_masquerade_enabled: true,
                 ipv6_masquerade_enabled: true,
-                resources: vec![],
             }),
         );
 

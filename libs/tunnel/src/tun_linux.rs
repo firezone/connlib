@@ -23,7 +23,6 @@ const TUNSETIFF: u64 = 0x4004_54ca;
 const TUN_FILE: &[u8] = b"/dev/net/tun\0";
 const RT_SCOPE_LINK: u8 = 253;
 const RT_PROT_UNSPEC: u8 = 0;
-const NETLINK_ERROR_FILE_EXISTS: i32 = -17;
 
 #[repr(C)]
 union IfrIfru {

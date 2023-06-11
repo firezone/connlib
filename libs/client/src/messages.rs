@@ -51,9 +51,9 @@ pub enum IngressMessages {
     Connect(Connect),
 
     // Resources: arrive in an orderly fashion
-    AddResource(ResourceDescription),
-    RemoveResource(RemoveResource),
-    UpdateResource(ResourceDescription),
+    ResourceAdded(ResourceDescription),
+    ResourceRemoved(RemoveResource),
+    ResourceUpdated(ResourceDescription),
 }
 
 /// The replies that can arrive from the channel by a client
@@ -72,9 +72,9 @@ pub enum Messages {
     Connect(Connect),
 
     // Resources: arrive in an orderly fashion
-    AddResource(ResourceDescription),
-    RemoveResource(RemoveResource),
-    UpdateResource(ResourceDescription),
+    ResourceAdded(ResourceDescription),
+    ResourceRemoved(RemoveResource),
+    ResourceUpdated(ResourceDescription),
 }
 
 impl From<IngressMessages> for Messages {
@@ -82,9 +82,9 @@ impl From<IngressMessages> for Messages {
         match value {
             IngressMessages::Init(m) => Self::Init(m),
             IngressMessages::Connect(m) => Self::Connect(m),
-            IngressMessages::AddResource(m) => Self::AddResource(m),
-            IngressMessages::RemoveResource(m) => Self::RemoveResource(m),
-            IngressMessages::UpdateResource(m) => Self::UpdateResource(m),
+            IngressMessages::ResourceAdded(m) => Self::ResourceAdded(m),
+            IngressMessages::ResourceRemoved(m) => Self::ResourceRemoved(m),
+            IngressMessages::ResourceUpdated(m) => Self::ResourceUpdated(m),
         }
     }
 }
