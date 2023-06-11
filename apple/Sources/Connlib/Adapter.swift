@@ -31,11 +31,9 @@ private enum State {
 public class Adapter {
   private let logger = Logger(subsystem: "dev.firezone.firezone", category: "packet-tunnel")
 
-  // Maintain a handle to the currently instantiated tunnel adapter 🤮
-  public static var currentAdapter: Adapter?
-
-  // Maintain a reference to the initialized callback handler
-  public static var callbackHandler: CallbackHandler?
+  // Initialize callback handler after the adapter is initialized,
+  // just when the callback handler needs to be used
+  private lazy var callbackHandler = CallbackHandler(adapter: self)
 
   // Latest applied NETunnelProviderNetworkSettings
   public var lastNetworkSettings: NEPacketTunnelNetworkSettings?
@@ -54,16 +52,9 @@ public class Adapter {
 
   public init(with packetTunnelProvider: NEPacketTunnelProvider) {
     self.packetTunnelProvider = packetTunnelProvider
-
-    // There must be a better way than making this a static class var...
-    Self.currentAdapter = self
-    Self.callbackHandler = CallbackHandler(adapter: self)
   }
 
   deinit {
-    // Remove static var reference
-    Self.currentAdapter = nil
-
     // Cancel network monitor
     networkMonitor?.cancel()
 
@@ -97,7 +88,7 @@ public class Adapter {
           WrappedSession.connect(
             portalURL,
             token,
-            Self.callbackHandler!
+            self.callbackHandler
           )
         )
         self.networkMonitor = networkMonitor
@@ -281,7 +272,7 @@ public class Adapter {
           try self.setNetworkSettings(self.lastNetworkSettings!)
 
           self.state = .started(
-            try WrappedSession.connect("http://localhost:4568", "test-token", Self.callbackHandler!)
+            try WrappedSession.connect("http://localhost:4568", "test-token", self.callbackHandler)
           )
         } catch {
           self.logger.log(level: .debug, "Failed to restart backend: \(error.localizedDescription)")
