@@ -13,6 +13,7 @@ for sdk in macosx iphoneos iphonesimulator; do
     BUILD_LIBRARY_FOR_DISTRIBUTION=YES
 done
 
+rm -rf ./Connlib.xcframework
 xcodebuild -create-xcframework \
   -framework ./connlib-iphoneos.xcarchive/Products/Library/Frameworks/connlib.framework \
   -framework ./connlib-iphonesimulator.xcarchive/Products/Library/Frameworks/connlib.framework \
