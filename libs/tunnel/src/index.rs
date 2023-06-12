@@ -31,6 +31,7 @@ impl IndexLfsr {
         // 24-bit polynomial for randomness. This is arbitrarily chosen to
         // inject bitflips into the value.
         const LFSR_POLY: u32 = 0xd80000; // 24-bit polynomial
+        debug_assert_ne!(self.lfsr, 0);
         let value = self.lfsr - 1; // lfsr will never have value of 0
         self.lfsr = (self.lfsr >> 1) ^ ((0u32.wrapping_sub(self.lfsr & 1u32)) & LFSR_POLY);
         assert!(self.lfsr != self.initial, "Too many peers created");

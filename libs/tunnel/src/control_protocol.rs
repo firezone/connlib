@@ -301,7 +301,7 @@ where
         let local_desc = peer_connection
             .local_description()
             .await
-            .ok_or(Error::ConnectionStablishError)?;
+            .ok_or(Error::ConnectionEstablishError)?;
 
         Ok(local_desc)
     }

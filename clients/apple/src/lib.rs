@@ -9,7 +9,6 @@ use firezone_client_connlib::{
 
 #[swift_bridge::bridge]
 mod ffi {
-    // TODO: Allegedly not FFI safe, but works
     #[swift_bridge(swift_repr = "struct")]
     struct ResourceList {
         resources: String,
