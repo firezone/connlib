@@ -40,9 +40,9 @@ pub enum ConnlibError {
     /// Error while sending through an async channelchannel.
     #[error("Error sending message through an async channel")]
     SendChannelError,
-    /// Error when trying to stablish connection between peers.
-    #[error("Error while stablishing connection between peers")]
-    ConnectionStablishError,
+    /// Error when trying to establish connection between peers.
+    #[error("Error while establishing connection between peers")]
+    ConnectionEstablishError,
     /// Error related to wireguard protocol.
     #[error("Wireguard error")]
     WireguardError(WireGuardError),
