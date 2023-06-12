@@ -346,14 +346,12 @@ where
                     continue;
                 }
 
-                let decapsulate_result = {
-                    peer.tunnel.lock().decapsulate(
-                        // TODO: See comment above
-                        None,
-                        &src_buf[..size],
-                        &mut dst_buf[..],
-                    )
-                };
+                let decapsulate_result = peer.tunnel.lock().decapsulate(
+                    // TODO: See comment above
+                    None,
+                    &src_buf[..size],
+                    &mut dst_buf[..],
+                );
 
                 // We found a peer, use it to decapsulate the message+
                 let mut flush = false;
