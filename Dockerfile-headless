@@ -1,0 +1,11 @@
+FROM rust:1.70-slim as BUILDER
+WORKDIR /build/
+COPY . ./
+RUN cargo build -p headless --release
+  
+# TODO: Change to musl + alpine
+FROM debian:bullseye-slim
+WORKDIR /app/
+COPY --from=BUILDER /build/target/release/headless .
+ENV PATH "/app:$PATH"
+CMD ["headless"]
