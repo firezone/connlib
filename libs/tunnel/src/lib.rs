@@ -458,7 +458,7 @@ where
                                 let mut awaiting_connection = dev.awaiting_connection.lock();
                                 let id = resource.id();
                                 if !awaiting_connection.contains(&id) {
-                                    tracing::trace!("Found new intent to send packets to resource with resource-ip: {dst_addr}, initalizing conection...");
+                                    tracing::trace!("Found new intent to send packets to resource with resource-ip: {dst_addr}, initializing connection...");
 
                                     awaiting_connection.insert(id);
                                     let dev = Arc::clone(&dev);
