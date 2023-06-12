@@ -1,7 +1,7 @@
 //! Connlib tunnel implementation.
 //!
 //! This is both the wireguard and ICE implementation that should work in tandem.
-//! [Tunnel] is the  main entry-point for this crate.
+//! [Tunnel] is the main entry-point for this crate.
 use ip_network::IpNetwork;
 use ip_network_table::IpNetworkTable;
 use libs_common::{
