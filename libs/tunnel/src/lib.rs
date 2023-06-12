@@ -489,7 +489,7 @@ where
                         );
                     }
                     TunnResult::Err(e) => {
-                        tracing::error!(message = "Encapsulate error for resoruce corresponding to {dst_addr}", error = ?e);
+                        tracing::error!(message = "Encapsulate error for resource corresponding to {dst_addr}", error = ?e);
                         CB::on_error(&e.into(), Recoverable);
                     }
                     TunnResult::WriteToNetwork(packet) => {
