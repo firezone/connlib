@@ -1,24 +1,12 @@
-[package]
-name = "firezone-connlib"
-version = "0.1.6"
-edition = "2021"
-
-[dependencies]
-# Apple tunnel dependencies
-[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
-boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "878385f", features = ["device"] }
-
-# Linux tunnel dependencies
-[target.'cfg(target_os = "linux")'.dependencies]
-boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "878385f", features = ["device"] }
-
-# Android tunnel dependencies
-[target.'cfg(target_os = "android")'.dependencies]
-boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "878385f", features = ["jni-bindings"] }
-android_logger = "0.13"
-log = "0.4.14"
-
-# Windows tunnel dependencies
-[target.'cfg(target_os = "windows")'.dependencies]
-boringtun = { git = "https://github.com/cloudflare/boringtun", rev = "878385f" }
-wintun = "0.2.1"
+[workspace]
+members = [
+  "clients/android",
+  "clients/apple",
+  "clients/headless",
+  "libs/tunnel",
+  "libs/client",
+  "libs/gateway",
+  "libs/common",
+  "gateway",
+  "macros",
+]
