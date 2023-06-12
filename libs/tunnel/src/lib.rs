@@ -493,7 +493,7 @@ where
                         CB::on_error(&e.into(), Recoverable);
                     }
                     TunnResult::WriteToNetwork(packet) => {
-                        tracing::trace!("writing iface packet to peer: {}", dst_addr);
+                        tracing::trace!("writing iface packet to peer: {dst_addr}");
                         if let Err(e) = channel.write(&Bytes::copy_from_slice(packet)).await {
                             tracing::error!("Couldn't write packet to channel: {e}");
                             CB::on_error(&e.into(), Recoverable);
