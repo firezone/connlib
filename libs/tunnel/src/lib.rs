@@ -450,7 +450,7 @@ where
                             peer.channel.clone(),
                         ),
                         None => {
-                            // We can buffer requests here but will drop them for now and let the upper layer reialability protocol handle this
+                            // We can buffer requests here but will drop them for now and let the upper layer reliability protocol handle this
                             if let Some(resource) = dev.get_resource(&src[..res]) {
                                 // We have awaiting connection to prevent a race condition where
                                 // create_peer_connection hasn't added the thing to peer_connections
