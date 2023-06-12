@@ -121,7 +121,7 @@ impl From<libs_common::messages::Peer> for PeerConfig {
 /// Generally, we try to return from the functions here rather than using this callback.
 #[async_trait]
 pub trait ControlSignal {
-    /// Signals to the control plane an intent to initiate a connecti to the given resource.
+    /// Signals to the control plane an intent to initiate a connection to the given resource.
     ///
     /// Used when a packet is found to a resource we have no connection stablished but is within the list of resources available for the client.
     async fn signal_connection_to(&self, resource: &ResourceDescription) -> Result<()>;
