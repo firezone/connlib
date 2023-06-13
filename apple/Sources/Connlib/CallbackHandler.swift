@@ -91,3 +91,9 @@ extension ResourceList {
         return try JSONDecoder().decode([Resource].self, from: jsonData)
     }
 }
+
+extension TunnelAddresses {
+    func toInterfaceAddresses() -> InterfaceAddresses {
+        InterfaceAddresses(ipv4: address4.toString(), ipv6: address6.toString())
+    }
+}
