@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		6FDEBD6C2A382AFE00FD926A /* Resource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDEBD6B2A382AFE00FD926A /* Resource.swift */; };
+		6FDEBD712A3837E100FD926A /* InterfaceAddresses.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDEBD702A3837E100FD926A /* InterfaceAddresses.swift */; };
 		8D46EDDF29DBC29800FF01CA /* Adapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D46EDD729DBC29800FF01CA /* Adapter.swift */; };
 		8D46EDE029DBC29800FF01CA /* CallbackHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D46EDD829DBC29800FF01CA /* CallbackHandler.swift */; };
 		8D967B2B29DBA064000B9D58 /* libconnlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D967B2A29DBA03F000B9D58 /* libconnlib.a */; };
@@ -22,6 +23,7 @@
 
 /* Begin PBXFileReference section */
 		6FDEBD6B2A382AFE00FD926A /* Resource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Resource.swift; sourceTree = "<group>"; };
+		6FDEBD702A3837E100FD926A /* InterfaceAddresses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterfaceAddresses.swift; sourceTree = "<group>"; };
 		8D209DCE29DBE96B00B68D27 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.4.sdk/System/Library/Frameworks/Security.framework; sourceTree = DEVELOPER_DIR; };
 		8D46EDD629DBC29800FF01CA /* BridgingHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BridgingHeader.h; sourceTree = "<group>"; };
 		8D46EDD729DBC29800FF01CA /* Adapter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Adapter.swift; sourceTree = "<group>"; };
@@ -53,6 +55,7 @@
 			isa = PBXGroup;
 			children = (
 				6FDEBD6B2A382AFE00FD926A /* Resource.swift */,
+				6FDEBD702A3837E100FD926A /* InterfaceAddresses.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -242,6 +245,7 @@
 				8D46EDDF29DBC29800FF01CA /* Adapter.swift in Sources */,
 				8D46EDE029DBC29800FF01CA /* CallbackHandler.swift in Sources */,
 				6FDEBD6C2A382AFE00FD926A /* Resource.swift in Sources */,
+				6FDEBD712A3837E100FD926A /* InterfaceAddresses.swift in Sources */,
 				8DA207FC29DBD80C00703A4A /* SwiftBridgeCore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
