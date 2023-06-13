@@ -31,14 +31,9 @@ private enum State {
 public class Adapter {
   private let logger = Logger(subsystem: "dev.firezone.firezone", category: "packet-tunnel")
 
-  // Maintain a handle to the currently instantiated tunnel adapter 🤮
-  public static var currentAdapter: Adapter?
-
-  // Maintain a reference to the initialized callback handler
-  public static var callbackHandler: CallbackHandler?
-
-  // Latest applied NETunnelProviderNetworkSettings
-  public var lastNetworkSettings: NEPacketTunnelNetworkSettings?
+  // Initialize callback handler after the adapter is initialized,
+  // just when the callback handler needs to be used
+  private lazy var callbackHandler = CallbackHandler(adapter: self)
 
   /// Packet tunnel provider.
   private weak var packetTunnelProvider: NEPacketTunnelProvider?
@@ -51,19 +46,16 @@ public class Adapter {
 
   /// Adapter state.
   private var state: State = .stopped
+  private var interfaceAddresses: InterfaceAddresses?
+  private var resources: [Resource] = []
+
+  private var isTunnelStarted = false
 
   public init(with packetTunnelProvider: NEPacketTunnelProvider) {
     self.packetTunnelProvider = packetTunnelProvider
-
-    // There must be a better way than making this a static class var...
-    Self.currentAdapter = self
-    Self.callbackHandler = CallbackHandler(adapter: self)
   }
 
   deinit {
-    // Remove static var reference
-    Self.currentAdapter = nil
-
     // Cancel network monitor
     networkMonitor?.cancel()
 
@@ -77,7 +69,7 @@ public class Adapter {
   /// Start the tunnel tunnel.
   /// - Parameters:
   ///   - completionHandler: completion handler.
-  public func start(completionHandler: @escaping (AdapterError?) -> Void) throws {
+  public func start(portalURL: String, token: String, completionHandler: @escaping (AdapterError?) -> Void) throws {
     workQueue.async {
       guard case .stopped = self.state else {
         completionHandler(.invalidState)
@@ -90,17 +82,20 @@ public class Adapter {
       }
       networkMonitor.start(queue: self.workQueue)
 
-      do {
-        try self.setNetworkSettings(self.generateNetworkSettings(ipv4Routes: [], ipv6Routes: []))
+      self.callbackHandler.delegate = self
 
+      do {
         self.state = .started(
           WrappedSession.connect(
-            "http://localhost:4568",
-            "test-token",
-            Self.callbackHandler!
+            portalURL,
+            token,
+            self.callbackHandler
           )
         )
         self.networkMonitor = networkMonitor
+        self.isTunnelStarted = true
+        let settings = self.generateNetworkSettings(interfaceAddresses: self.interfaceAddresses, resources: self.resources)
+        try self.setNetworkSettings(settings)
         completionHandler(nil)
       } catch let error as AdapterError {
         networkMonitor.cancel()
@@ -133,48 +128,53 @@ public class Adapter {
     }
   }
 
-  public func generateNetworkSettings(
-    addresses4: [String] = ["100.100.111.2"], addresses6: [String] = ["fd00:0222:2011:1111::2"],
-    ipv4Routes: [NEIPv4Route], ipv6Routes: [NEIPv6Route]
-  )
-    -> NEPacketTunnelNetworkSettings
-  {
-    // The destination IP that connlib will assign our DNS proxy to.
-    let dnsSentinel = "1.1.1.1"
+  func generateNetworkSettings(interfaceAddresses: InterfaceAddresses?, resources: [Resource]) -> NEPacketTunnelNetworkSettings {
+
+    // Interface addresses
+    let ipv4InterfaceAddresses = [interfaceAddresses?.ipv4].compactMap { $0 }
+    let ipv4SubnetMasks = ipv4InterfaceAddresses.map { _ in "255.255.255.255" }
+
+    let ipv6InterfaceAddresses = [interfaceAddresses?.ipv6].compactMap { $0 }
+    let ipv6SubnetMasks = ipv6InterfaceAddresses.map { _ in NSNumber(integerLiteral: 128) }
+
+    // Routes
+    var ipv4Routes: [NEIPv4Route] = []
+    var ipv6Routes: [NEIPv6Route] = []
+
+    for resource in resources {
+      switch resource.resourceLocation {
+      case .dns(_, let ipv4, let ipv6):
+        if !ipv4.isEmpty {
+          ipv4Routes.append(NEIPv4Route(destinationAddress: ipv4, subnetMask: "255.255.255.255"))
+        }
+        if !ipv6.isEmpty {
+          ipv6Routes.append(NEIPv6Route(destinationAddress: ipv6, networkPrefixLength: 128))
+        }
+      case .cidr(let addressRange):
+        ipv4Routes.append(NEIPv4Route(destinationAddress: "\(addressRange.maskedAddress())", subnetMask: "\(addressRange.subnetMask())"))
+      }
+    }
+
+    // DNS
+    let dnsSentinel = "1.1.1.1" // The destination IP that connlib will assign our DNS proxy to
+    let dnsSettings = NEDNSSettings(servers: [dnsSentinel])
+    dnsSettings.matchDomains = [""] // All DNS queries must first go through the tunnel's DNS
+
+    // Put it together
+
+    let ipv4Settings = NEIPv4Settings(addresses: ipv4InterfaceAddresses, subnetMasks: ipv4SubnetMasks)
+    let ipv6Settings = NEIPv6Settings(addresses: ipv6InterfaceAddresses, networkPrefixLengths: ipv6SubnetMasks)
+    ipv4Settings.includedRoutes = ipv4Routes
+    ipv6Settings.includedRoutes = ipv6Routes
+
+    let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
+    networkSettings.dnsSettings = dnsSettings
+    networkSettings.ipv4Settings = ipv4Settings
+    networkSettings.ipv6Settings = ipv6Settings
 
     // We can probably do better than this; see https://www.rfc-editor.org/info/rfc4821
     // But stick with something simple for now. 1280 is the minimum that will work for IPv6.
-    let mtu = 1280
-
-    // TODO: replace these with IPs returned from the connect call to portal
-    let subnetmask = "255.192.0.0"
-    let networkPrefixLength = NSNumber(value: 64)
-
-    /* iOS requires a tunnel endpoint, whereas in WireGuard it's valid for
-       * a tunnel to have no endpoint, or for there to be many endpoints, in
-       * which case, displaying a single one in settings doesn't really
-       * make sense. So, we fill it in with this placeholder, which is not
-       * a valid IP address that will actually route over the Internet.
-       */
-    let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
-    let dnsSettings = NEDNSSettings(servers: [dnsSentinel])
-
-    // All DNS queries must first go through the tunnel's DNS
-    dnsSettings.matchDomains = [""]
-    networkSettings.dnsSettings = dnsSettings
-    networkSettings.mtu = NSNumber(value: mtu)
-
-    let ipv4Settings = NEIPv4Settings(
-      addresses: addresses4,
-      subnetMasks: [subnetmask])
-    ipv4Settings.includedRoutes = ipv4Routes
-    networkSettings.ipv4Settings = ipv4Settings
-
-    let ipv6Settings = NEIPv6Settings(
-      addresses: addresses6,
-      networkPrefixLengths: [networkPrefixLength])
-    ipv6Settings.includedRoutes = ipv6Routes
-    networkSettings.ipv6Settings = ipv6Settings
+    networkSettings.mtu = NSNumber(value: 1280)
 
     return networkSettings
   }
@@ -201,56 +201,18 @@ public class Adapter {
         throw AdapterError.setNetworkSettings(systemError)
       }
     }
-
-    // Save the latest applied network settings if there was no error.
-    if systemError != nil {
-      self.lastNetworkSettings = networkSettings
-    }
   }
 
-  /// Update runtime configuration.
-  /// - Parameters:
-  ///   - ipv4Routes: IPv4 routes to send through the tunnel.
-  ///   - ipv6Routes: IPv6 routes to send through the tunnel.
-  ///   - completionHandler: completion handler.
-  public func update(
-    ipv4Routes: [NEIPv4Route], ipv6Routes: [NEIPv6Route],
-    completionHandler: @escaping (AdapterError?) -> Void
-  ) {
+  private func updateTunnelNetworkSettings() {
+    guard isTunnelStarted else {
+      return
+    }
+    let settings = generateNetworkSettings(interfaceAddresses: self.interfaceAddresses, resources: self.resources)
     workQueue.async {
-      if case .stopped = self.state {
-        completionHandler(.invalidState)
-        return
-      }
-
-      // Tell the system that the tunnel is going to reconnect using new WireGuard
-      // configuration.
-      // This will broadcast the `NEVPNStatusDidChange` notification to the GUI process.
-      self.packetTunnelProvider?.reasserting = true
-      defer {
-        self.packetTunnelProvider?.reasserting = false
-      }
-
       do {
-        try self.setNetworkSettings(
-          self.generateNetworkSettings(ipv4Routes: ipv4Routes, ipv6Routes: ipv6Routes))
-
-        switch self.state {
-        case .started(let wrappedSession):
-          self.state = .started(wrappedSession)
-
-        case .temporaryShutdown:
-          self.state = .temporaryShutdown
-
-        case .stopped:
-          fatalError()
-        }
-
-        completionHandler(nil)
-      } catch let error as AdapterError {
-        completionHandler(error)
+        try self.setNetworkSettings(settings)
       } catch {
-        fatalError()
+        self.logger.log(level: .debug, "setNetworkSettings failed: \(error)")
       }
     }
   }
@@ -281,7 +243,7 @@ public class Adapter {
           try self.setNetworkSettings(self.lastNetworkSettings!)
 
           self.state = .started(
-            try WrappedSession.connect("http://localhost:4568", "test-token", Self.callbackHandler!)
+            try WrappedSession.connect("http://localhost:4568", "test-token", self.callbackHandler)
           )
         } catch {
           self.logger.log(level: .debug, "Failed to restart backend: \(error.localizedDescription)")
@@ -294,5 +256,17 @@ public class Adapter {
     #else
       #error("Unsupported")
     #endif
+  }
+}
+
+extension Adapter: CallbackHandlerDelegate {
+  public func didUpdateResources(_ resources: [Resource]) {
+    self.resources = resources
+    updateTunnelNetworkSettings()
+  }
+
+  public func didUpdateInterfaceAddresses(_ interfaceAddresses: InterfaceAddresses) {
+    self.interfaceAddresses = interfaceAddresses
+    updateTunnelNetworkSettings()
   }
 }
