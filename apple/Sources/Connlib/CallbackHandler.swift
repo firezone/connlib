@@ -77,3 +77,17 @@ public class CallbackHandler {
         }
     }
 }
+
+extension ResourceList {
+    enum ParseError: Error {
+        case notUTF8
+    }
+
+    func toResources() throws -> [Resource] {
+        let jsonString = resources.toString()
+        guard let jsonData = jsonString.data(using: .utf8) else {
+            throw ParseError.notUTF8
+        }
+        return try JSONDecoder().decode([Resource].self, from: jsonData)
+    }
+}
