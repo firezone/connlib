@@ -8,7 +8,7 @@ import Foundation
 public struct Resource: Decodable {
     enum ResourceLocation {
         case dns(domain: String, ipv4: String, ipv6: String)
-        case cidr(cidrAddress: String)
+        case cidr(addressRange: IPAddressRange)
     }
 
     let name: String
@@ -42,6 +42,7 @@ extension Resource {
 
     enum DecodeError: Error {
         case invalidType(String)
+        case invalidCIDRAddress(String)
     }
 
     public init(from decoder: Decoder) throws {
@@ -56,8 +57,11 @@ extension Resource {
                 let ipv6 = try container.decode(String.self, forKey: .ipv6)
                 return .dns(domain: domain, ipv4: ipv4, ipv6: ipv6)
             case "cidr":
-                let address = try container.decode(String.self, forKey: .address)
-                return .cidr(cidrAddress: address)
+                let addressString = try container.decode(String.self, forKey: .address)
+                guard let ipAddressRange = IPAddressRange(from: addressString) else {
+                    throw DecodeError.invalidCIDRAddress(addressString)
+                }
+                return .cidr(addressRange: ipAddressRange)
             default:
                 throw DecodeError.invalidType(type)
             }
